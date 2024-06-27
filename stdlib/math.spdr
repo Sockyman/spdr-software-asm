@@ -1,0 +1,16 @@
+once
+
+section "var"
+math:
+.div_result:
+.number_1:
+    res 2
+.number_2:
+    res 2
+.result:
+    res 4
+.shift_bit:
+.remainder:
+    res 2
+section "code"
+

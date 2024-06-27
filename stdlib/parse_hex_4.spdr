@@ -1,0 +1,33 @@
+once
+parse_hex_4:
+    mov a, [cd]
+    inc c
+    incc d
+get_hex_4:
+    cmp a, '0'
+    jnc .not_digit
+    cmp a, '9' + 1
+    jc .not_digit
+    sub a, '0'
+    jmp .end
+.not_digit:
+    cmp a, 'A'
+    jnc .not_upper
+    cmp a, 'F' + 1
+    jc .not_upper
+    sub a, ('A' - 0xa)
+    jmp .end
+.not_upper:
+    cmp a, 'a'
+    jnc .not_lower
+    cmp a, 'f' + 1
+    jc .not_lower
+    sub a, ('a' - 0xa)
+    jmp .end
+.not_lower:
+    mov f, 0x0
+    ret 
+.end:
+    mov f, 0xff
+    ret 
+

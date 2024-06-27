@@ -1,0 +1,40 @@
+; Divides 2 unsigned 16 bit integers.
+; Input: math.number_1: numerator, math.number_2: denomenator
+; Result: math.result: quotient, math.remainder: remainder
+; Modifies: a, c, d, f
+
+once
+
+include "stdlib/math.spdr"
+
+divide_16:
+    mov a, 0
+    mov [math.remainder], a
+    mov [math.remainder + 1], a
+    mov c, 16
+.loop:
+    ; Shift
+    shl [math.number_1]
+    rol [math.number_1 + 1]
+    rol [math.remainder]
+    rol [math.remainder + 1]
+    ; Subtract
+    mov a, [math.remainder]
+    sub a, [math.number_2]
+    mov d, a
+    mov a, [math.remainder + 1]
+    subb a, [math.number_2 + 1]
+    jnc .next
+    ; Store subtracted value as remainder
+    mov [math.remainder], d
+    mov [math.remainder + 1], a
+    inc [math.number_1]
+    incc [math.number_1 + 1]
+.next:
+    dec c
+    jnz .loop
+    ; Done
+    mov a, [math.number_1]
+    mov c, [math.number_1 + 1]
+    ret 
+

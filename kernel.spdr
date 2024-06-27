@@ -1,0 +1,210 @@
+once
+
+include "stdlib/keycode.spdr"
+include "stdlib/lcd.spdr"
+include "stdlib/scancode.spdr"
+
+START_ADDRESS = 0x9000
+
+variable addr 2
+variable register_dump 4
+
+kernel:
+    mov a, LCD_DISPLAY_CURSOR | LCD_DISPLAY_BLINK
+    call lcd_init
+
+    mov a, START_ADDRESS
+    mov [addr], a
+    mov a, START_ADDRESS >> 8
+    mov [addr + 1], a
+
+    mov a, LCD_LINE_2
+    mov [cli_row], a
+
+monitor_loop:
+    call reset_cli
+    call monitor_redraw
+    call reset_cursor
+
+.cmd_loop:
+    call cli_loop
+    cmp a, KEY_ENTER
+    jz .enter_pressed
+    cmp a, KEY_ESC
+    jz .esc_pressed
+    jmp .cmd_loop
+.enter_pressed:
+    call parse_cmd
+.esc_pressed:
+    jmp monitor_loop
+
+include "kernel_io_symbols.spdr"
+;include "stdlib/getc.spdr"
+include "cli.spdr"
+include "stdlib/lcd_init.spdr"
+include "stdlib/print_hex_8.spdr"
+include "upload_test.spdr"
+
+parse_cmd:
+    mov c, input_line
+    mov d, input_line >> 8
+    call skip_ws
+    mov a, [cd]
+
+    cmp a, 'j'
+    jz .parse_jump
+    cmp a, 'x'
+    jz hexedit
+    cmp a, 'r'
+    jz .parse_register
+    cmp a, 0
+    jz .parse_advance
+    cmp a, 'i'
+    jz .parse_insert
+    cmp a, ';'
+    jz .parse_instruction
+    cmp a, 's'
+    jz disassembler
+    cmp a, 'l'
+    jz .parse_load
+.parse_goto:
+    call parse_hex_16
+    jnz .error
+    mov [addr], c
+    mov [addr + 1], d
+    ret
+
+.parse_jump:
+    call .get_16
+    call cd
+    mov [register_dump], a
+    mov [register_dump + 1], c
+    mov [register_dump + 2], d
+    mov a, f
+    mov [register_dump + 3], a
+    ret
+
+.parse_advance:
+    inc [addr]
+    incc [addr + 1]
+    ret
+
+.parse_instruction:
+    inc c
+    incc d
+    call insert_instruction
+    jnz .error
+    ret
+
+.parse_register:
+    mov a, register_dump
+    mov [addr], a
+    mov a, register_dump >> 8
+    mov [addr + 1], a
+    ret
+
+.parse_load:
+    call .get_16
+    call file_loader
+    ret
+
+.parse_insert:
+    inc c
+    incc d
+.insert_loop:
+    call skip_ws
+    mov a, [cd]
+    cmp a, 0
+    jz ..end
+    call parse_hex_8
+    jnz .error
+    xch c, [addr]
+    xch d, [addr + 1]
+    mov [cd], a
+    inc c
+    incc d
+    xch c, [addr]
+    xch d, [addr + 1]
+    jmp .insert_loop
+..end:
+    ret
+
+.get_16:
+    inc c
+    incc d
+    call skip_ws
+    jz ..no_argument
+    call parse_hex_16
+    jnz .error
+    ret 
+..no_argument:
+    mov c, [addr]
+    mov d, [addr + 1]
+    ret
+
+.error:
+    mov a, LCD_DDRAM
+    lcc a
+    mov c, error_text
+    mov d, error_text >> 8
+    call print_string
+    call getc
+    ret
+
+error_text:
+    data "error: bad input", 0
+
+
+monitor_redraw:
+    call cli_redraw
+    mov a, LCD_DDRAM
+    lcc a
+
+    mov c, [addr]
+    mov d, [addr + 1]
+    call dump_line
+.end:
+    ret 
+
+dump_line:
+    mov a, d
+    call print_hex_8
+    mov a, c
+    call print_hex_8
+
+    mov a, 4
+    mov [.byte_counter], a
+.byte_loop:
+    dec [.byte_counter]
+    jnc .end
+    mov a, ' '
+    lcd a
+    mov a, [cd]
+    call print_hex_8
+    inc c
+    incc d
+    jmp .byte_loop
+.end:
+    ret 
+    
+variable .byte_counter 1
+
+include "disassembler.spdr"
+include "hexedit.spdr"
+
+skip_ws:
+    mov a, [cd]
+    cmp a, ' '
+    jnz .end
+    inc c
+    incc d
+    jmp skip_ws
+.end:
+    ret 
+
+include "stdlib/parse_hex_8.spdr"
+include "stdlib/parse_hex_16.spdr"
+
+include "insert_instruction.spdr"
+include "ins_set.spdr"
+

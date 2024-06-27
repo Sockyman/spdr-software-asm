@@ -1,0 +1,169 @@
+once
+
+include "stdlib/mem_compare.spdr"
+
+insert_byte:
+    push c
+    push d
+
+    mov c, [addr]
+    mov d, [addr + 1]
+    mov [cd], a
+    inc [addr]
+    incc [addr + 1]
+    
+    pop d
+    pop c
+    ret 
+
+insert_instruction:
+    call skip_ws
+
+.transfer_instruction:
+    mov a, .buffer
+    mov [.buffer_ptr], a
+    mov a, .buffer >> 8
+    mov [.buffer_ptr + 1], a
+    mov a, INS_STRING_LEN
+    mov [.char_count], a
+
+..transfer_loop:
+    dec [.char_count]
+    jnc ..done_transfer
+    mov a, [cd]
+
+    inc c
+    incc d
+    xch c, [.buffer_ptr]
+    xch d, [.buffer_ptr + 1]
+
+    mov [cd], a
+    inc c
+    incc d
+
+    cmp a, ' '
+    jz ..transfer_space
+
+    xch c, [.buffer_ptr]
+    xch d, [.buffer_ptr + 1]
+
+    jmp ..transfer_loop
+
+..transfer_space:
+    dec [.char_count]
+    jnc ..done_transfer_space
+    mov [cd], a
+    inc c
+    incc d
+    jmp ..transfer_space
+..done_transfer_space:
+    mov c, [.buffer_ptr]
+    mov d, [.buffer_ptr + 1]
+
+..done_transfer:
+    call skip_ws
+    mov [.input_ptr], c
+    mov [.input_ptr + 1], d
+
+.get_opcode:
+    mov a, instruction_set
+    mov [.buffer_ptr], a
+    mov a, instruction_set >> 8
+    mov [.buffer_ptr + 1], a
+
+    mov a, 0
+    mov [.opcode], a
+
+..opcode_loop:
+    mov a, [.buffer_ptr]
+    cmp a, instruction_set_end
+    jnz ...not_end
+    mov a, [.buffer_ptr + 1]
+    cmp a, instruction_set_end >> 8
+    jz .fail
+...not_end:
+    mov a, .buffer
+    mov [mem_compare.a], a
+    mov a, .buffer >> 8
+    mov [mem_compare.a + 1], a
+
+    mov a, [.buffer_ptr]
+    mov [mem_compare.b], a
+    mov a, [.buffer_ptr + 1]
+    mov [mem_compare.b + 1], a
+
+    mov a, INS_STRING_LEN
+    mov [mem_compare.count], a
+    mov a, INS_STRING_LEN >> 8
+    mov [mem_compare.count + 1], a
+
+    call mem_compare
+
+    jz ...done
+
+    inc [.opcode]
+    mov a, [.buffer_ptr]
+    add a, INS_ELEMENT_SIZE
+    mov [.buffer_ptr], a
+    incc [.buffer_ptr + 1]
+    jmp ..opcode_loop
+
+
+...done:
+
+.handle_sizes:
+    mov a, [.opcode]
+    out a
+    mov a, [.buffer_ptr]
+    add a, INS_STRING_LEN
+    mov c, a
+    mov d, [.buffer_ptr + 1]
+    incc d
+
+    mov a, [cd]
+    mov c, [.input_ptr]
+    mov d, [.input_ptr + 1]
+
+    cmp a, 1
+    jnc ..implied
+    jnz ..direct
+..immediate:
+    call parse_hex_8
+    jnz .fail
+    mov c, a
+    mov a, [.opcode]
+    call insert_byte
+    mov a, c
+    call insert_byte
+    jmp .end
+..implied:
+    mov a, [.opcode]
+    call insert_byte
+    jmp .end
+..direct:
+    call parse_hex_16
+    jnz .fail
+    mov a, [.opcode]
+    call insert_byte
+    mov a, c
+    call insert_byte
+    mov a, d
+    call insert_byte
+
+.end:
+    mov f, 0xf
+    ret 
+.fail:
+    mov f, 0x0
+    ret 
+
+
+INS_STRING_LEN = 5 
+INS_ELEMENT_SIZE = INS_STRING_LEN + 1 
+
+variable .input_ptr 2
+variable .char_count 1
+variable .buffer_ptr 2
+variable .buffer INS_STRING_LEN
+variable .opcode 1
+

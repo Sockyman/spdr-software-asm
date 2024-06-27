@@ -1,0 +1,29 @@
+once
+
+ISR_ADDRESS = 0x0100
+
+section "var"
+
+align 0x100
+scan_buffer:
+    res 0x100
+wptr:
+    res 1
+rptr:
+    res 1
+
+section "code"
+
+address ISR_ADDRESS
+isr:
+    push a
+    push c
+    in a
+    mov c, [wptr]
+    mov [c, scan_buffer], a
+    inc c
+    mov [wptr], c
+    pop c
+    pop a
+    rti 
+

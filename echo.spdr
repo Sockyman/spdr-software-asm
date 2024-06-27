@@ -1,0 +1,33 @@
+
+include "kernel_io_symbols.spdr"
+include "stdlib/lcd.spdr"
+include "stdlib/keycode.spdr"
+
+echo:
+    mov a, LCD_DISPLAY_CURSOR | LCD_DISPLAY_BLINK
+    call lcd_init
+
+    ; cli_row = LCD_LINE_2
+    mov a, LCD_DDRAM
+    mov [cli_row], a
+
+    call reset_cli
+.loop:
+    ; print_string(input_line)
+    mov a, LCD_LINE_2
+    lcc a
+    mov c, input_line
+    mov d, input_line >> 8
+    call print_string
+
+    call reset_cli
+    call cli_redraw
+    call reset_cursor
+.inner:
+    call cli_loop
+    cmp a, KEY_ENTER
+    jz .loop
+    jmp .inner
+
+include "cli.spdr"
+include "stdlib/lcd_init.spdr"

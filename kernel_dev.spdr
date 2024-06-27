@@ -1,0 +1,4 @@
+once
+include "kernel_io_symbols.spdr"
+include "kernel.spdr"
+

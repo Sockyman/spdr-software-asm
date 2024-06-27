@@ -1,0 +1,16 @@
+once
+include "stdlib/parse_hex_8.spdr"
+
+parse_hex_16:
+    call parse_hex_8
+    jnz .fail
+    push a
+    call parse_hex_8
+    pop d
+    jnz .fail
+    mov c, a
+    mov f, 0xff
+    ret 
+.fail:
+    ret 
+

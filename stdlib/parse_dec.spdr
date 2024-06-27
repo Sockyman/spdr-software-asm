@@ -1,0 +1,57 @@
+once
+
+parse_dec:
+    mov a, 0
+    mov [mul_10.acc], a
+    mov [mul_10.acc + 1], a
+.loop:
+    call peek_next
+
+    call is_decimal
+    jz .done
+
+    call parser_inc
+
+    sub a, '0'
+    mov [.input], a
+
+    call mul_10
+    mov a, [mul_10.acc]
+    add a, [.input]
+    mov [mul_10.acc], a
+    incc [mul_10.acc + 1]
+
+    jmp .loop
+.done:
+    mov c, [mul_10.acc]
+    mov d, [mul_10.acc + 1]
+    ret 
+
+variable .input 1
+
+mul_10:
+    shl [.acc]
+    rol [.acc + 1]
+
+    mov a, [.acc]
+    mov c, [.acc + 1]
+
+    shl [.acc]
+    rol [.acc + 1]
+    shl [.acc]
+    rol [.acc + 1]
+
+    add a, [.acc]
+    mov [.acc], a
+    mov a, c
+    addc a, [.acc + 1]
+    mov [.acc + 1], a
+
+    ret 
+
+variable .acc 2
+
+
+include "stdlib/is_decimal.spdr"
+include "stdlib/parse.spdr"
+

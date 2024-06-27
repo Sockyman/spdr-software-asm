@@ -1,0 +1,110 @@
+once
+INSTRUCTION_COUNT = 106
+instruction_set:
+    data "nop  ", 0
+    data "hlt  ", 0
+    data "INT  ", 0
+    data "lda$ ", 2
+    data "lda# ", 1
+    data "lda* ", 0
+    data "lda^ ", 1
+    data "ldx$ ", 2
+    data "ldx# ", 1
+    data "ldy$ ", 2
+    data "ldy# ", 1
+    data "ldf$ ", 2
+    data "ldf# ", 1
+    data "sta$ ", 2
+    data "sta^ ", 1
+    data "sta* ", 0
+    data "stx$ ", 2
+    data "sty$ ", 2
+    data "tax  ", 0
+    data "txa  ", 0
+    data "tay  ", 0
+    data "tya  ", 0
+    data "txy  ", 0
+    data "tyx  ", 0
+    data "taf  ", 0
+    data "tfa  ", 0
+    data "tas  ", 0
+    data "tsa  ", 0
+    data "xax  ", 0
+    data "xay  ", 0
+    data "xxy  ", 0
+    data "xch$ ", 2
+    data "xchx$", 2
+    data "xchy$", 2
+    data "add$ ", 2
+    data "add# ", 1
+    data "addc$", 2
+    data "addc#", 1
+    data "sub$ ", 2
+    data "sub# ", 1
+    data "subc$", 2
+    data "subc#", 1
+    data "cmp$ ", 2
+    data "cmp# ", 1
+    data "cmpc$", 2
+    data "cmpc#", 1
+    data "not  ", 0
+    data "and$ ", 2
+    data "and# ", 1
+    data "or$  ", 2
+    data "or#  ", 1
+    data "xor$ ", 2
+    data "xor# ", 1
+    data "bit$ ", 2
+    data "bit# ", 1
+    data "inc  ", 0
+    data "dec  ", 0
+    data "inx  ", 0
+    data "dex  ", 0
+    data "iny  ", 0
+    data "dey  ", 0
+    data "inc$ ", 2
+    data "dec$ ", 2
+    data "inc* ", 0
+    data "dec* ", 0
+    data "cinc ", 0
+    data "cinx ", 0
+    data "ciny ", 0
+    data "cdec ", 0
+    data "cdex ", 0
+    data "cdey ", 0
+    data "cinc$", 2
+    data "cdec$", 2
+    data "cinc*", 0
+    data "cdec*", 0
+    data "lsh  ", 0
+    data "rol  ", 0
+    data "rsh  ", 0
+    data "ror  ", 0
+    data "lsh$ ", 2
+    data "rol$ ", 2
+    data "rsh$ ", 2
+    data "ror$ ", 2
+    data "jmp$ ", 2
+    data "jmp* ", 0
+    data "jz$  ", 2
+    data "jnz$ ", 2
+    data "jc$  ", 2
+    data "jnc$ ", 2
+    data "jn$  ", 2
+    data "jp$  ", 2
+    data "pha  ", 0
+    data "phx  ", 0
+    data "phy  ", 0
+    data "phf  ", 0
+    data "pla  ", 0
+    data "plx  ", 0
+    data "ply  ", 0
+    data "plf  ", 0
+    data "phc  ", 0
+    data "ret  ", 0
+    data "rti  ", 0
+    data "out  ", 0
+    data "in   ", 0
+    data "lcd  ", 0
+    data "lcc  ", 0
+instruction_set_end:

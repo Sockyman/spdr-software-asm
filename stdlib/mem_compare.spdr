@@ -1,0 +1,47 @@
+once
+
+mem_compare:
+    mov c, [.b]
+    mov d, [.b + 1]
+
+.loop:
+    dec [.count]
+    decb [.count + 1]
+    jnc .equal
+
+    mov a, [cd]
+    mov [.comparison], a
+    inc c
+    incc d
+    xch c, [.a]
+    xch d, [.a + 1]
+
+    mov a, [cd]
+    cmp a, [.comparison]
+    jnz .not_equal
+
+    inc c
+    incc d
+    xch c, [.a]
+    xch d, [.a + 1]
+    jmp .loop
+
+.not_equal:
+    ret 
+
+.equal:
+    mov f, 0xf
+    ret 
+
+
+section "var"
+.comparison:
+res 1
+.a:
+res 2
+.b:
+res 2
+.count:
+res 2
+section "code"
+

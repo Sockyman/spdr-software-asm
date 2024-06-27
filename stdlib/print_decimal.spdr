@@ -1,0 +1,21 @@
+once
+
+include "stdlib/divide.spdr"
+
+print_decimal:
+    mov d, 0
+.get_digit:
+    mov c, 10
+    call divide
+    push c
+    inc d
+    cmp a, 0
+    jnz .get_digit
+.print:
+    pop a
+    add a, '0'
+    lcd a
+    dec d
+    jnz .print
+    ret 
+

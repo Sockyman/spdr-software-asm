@@ -1,0 +1,14 @@
+once
+is_decimal:
+    cmp a, '9' + 1
+    jc .no
+
+    cmp a, '0'
+    jnc .no
+
+    mov f, 0
+    ret 
+.no:
+    mov f, 0xff
+    ret 
+

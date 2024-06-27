@@ -1,0 +1,71 @@
+once
+
+READY_CODE = 0xff
+DONE_CODE = 0xfe
+SIZE_CODE = 0xfd
+ERROR_CODE = 0xfc
+
+MAGIC = 0xaa
+
+section "var"
+transfer_counter:
+    res 1
+program_ptr:
+    res 2
+section "code"
+
+file_loader:
+    mov [program_ptr], c
+    mov [program_ptr + 1], d
+    prog 
+    cmp a, MAGIC
+    jnz file_loader
+.read:
+    prog 
+    cmp a, READY_CODE
+    jz .wait
+    cmp a, 0
+    jz .wait
+    cmp a, DONE_CODE
+    jz .done
+    jmp .size
+
+.wait:
+    mov c, 10
+..loop:
+    dec c
+    jc ..loop
+    jmp .read
+
+.size:
+    mov [transfer_counter], a
+    mov c, [program_ptr]
+    mov d, [program_ptr + 1]
+..loop:
+    dec [transfer_counter]
+    jnc ..end
+    prog 
+    mov [cd], a
+    inc c
+    incc d
+    add a, [.checksum]
+    mov [.checksum], a
+    jmp ..loop
+..end:
+    mov [program_ptr], c
+    mov [program_ptr + 1], d
+    jmp .read
+    
+.done:
+    prog
+    cmp a, [.checksum]
+    jnz .error
+    ret 
+
+.error:
+    mov a, 127
+    out a
+    ret
+
+variable .checksum 1
+

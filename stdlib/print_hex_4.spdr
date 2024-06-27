@@ -1,0 +1,14 @@
+once
+
+print_hex_4:
+    add a, (hex_values)
+    mov c, a
+    mov d, (hex_values >> 8)
+    incc d
+    mov a, [cd]
+    lcd a
+    ret 
+
+hex_values:
+    data "0123456789ABCDEF"
+

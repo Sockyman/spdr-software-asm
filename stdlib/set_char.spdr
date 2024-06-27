@@ -1,0 +1,31 @@
+once
+
+set_char:
+    mov a, [.char]
+    shl a
+    shl a
+    shl a
+    or a, LCD_CGRAM
+    mov [.char], a
+    mov a, 7
+.loop:
+    mov [.line], a
+    or a, [.char]
+    lcc a
+    mov a, [.data]
+    add a, [.line]
+    mov c, a
+    mov a, [.data + 1]
+    addc a, 0
+    mov d, a
+    mov a, [cd]
+    lcd a
+    mov a, [.line]
+    dec a
+    jc .loop
+    mov a, LCD_DDRAM
+    lcc a
+    ret 
+
+variable .line 2
+

@@ -1,0 +1,17 @@
+once
+
+include "stdlib/lcd.spdr"
+
+lcd_init:
+    mov c, a
+    mov a, (LCD_FUNCTION)
+    lcc a
+    mov a, c
+    or a, (LCD_DISPLAY)
+    lcc a
+    mov a, (LCD_ENTRY | LCD_ENTRY_INCREMENT)
+    lcc a
+    mov a, (LCD_CLEAR)
+    lcc a
+    ret 
+

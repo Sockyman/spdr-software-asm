@@ -1,0 +1,21 @@
+once
+include "stdlib/parse_hex_4.spdr"
+
+parse_hex_8:
+    call parse_hex_4
+    jnz .fail
+    shl a
+    shl a
+    shl a
+    shl a
+    mov [.high_nibble], a
+    call parse_hex_4
+    jnz .fail
+    or a, [.high_nibble]
+    mov f, 0xff
+    ret 
+.fail:
+    ret 
+
+variable .high_nibble 1
+

@@ -1,0 +1,24 @@
+once
+
+variable parse_ptr 2
+
+peek_next:
+    mov c, [parse_ptr]
+    mov d, [parse_ptr + 1]
+    mov a, [cd]
+    ret 
+
+parser_inc:
+    inc [parse_ptr]
+    incc [parse_ptr + 1]
+    ret
+
+get_next:
+    mov c, [parse_ptr]
+    mov d, [parse_ptr + 1]
+    mov a, [cd]
+
+    inc [parse_ptr]
+    incc [parse_ptr + 1]
+    ret 
+

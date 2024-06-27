@@ -1,0 +1,79 @@
+once
+; source: https://archive.org/details/byte-magazine-1977-05/page/n64/
+
+MANT_SIGN = 0x80
+EXP = 0x7f
+
+normal:
+.loop:
+; MANT<0.1'2
+    mov a, [f0.mant + 1]
+    bit a, 0x80
+    jnz .end
+; MANT*=2
+    shl [f0.mant]
+    rol [f0.mant + 1]
+; EXP==-64
+    mov a, [f0.exp]
+    and a, EXP
+    cmp a, 0x40
+    jz .underflow
+    dec a
+    mov [f0.exp], a
+    jmp .loop
+.underflow:
+; ANS=0
+    mov a, 0
+    mov [f0.mant], a
+    mov [f0.mant + 1], a
+    mov [f0.exp], a
+.end:
+    ret 
+
+move_mantisas:
+    mov a, [f0.mant]
+    mov [math.number_1], a
+    mov a, [f0.mant + 1]
+    mov [math.number_1 + 1], a
+    mov a, [f1.mant]
+    mov [math.number_2], a
+    mov a, [f1.mant + 1]
+    mov [math.number_2 + 1], a
+    ret 
+
+find_sign:
+    mov a, [f0.exp]
+    xor a, [f1.exp]
+    and a, MANT_SIGN
+
+store_float:
+.a:
+    mov [f0], a
+    mov [f0 + 1], c
+    mov [f0 + 2], d
+    ret 
+.b:
+    mov [f1], a
+    mov [f1 + 1], c
+    mov [f1 + 2], d
+    ret 
+
+include "stdlib/math.spdr"
+
+section "var"
+
+ftemp:
+    res 1
+f0:
+.exp:
+    res 1
+.mant:
+    res 2
+f1:
+.exp:
+    res 1
+.mant:
+    res 2
+
+section "code"
+

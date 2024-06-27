@@ -1,0 +1,34 @@
+once
+
+string_copy:
+.loop:
+    mov c, [.src]
+    mov d, [.src + 1]
+    mov a, [cd]
+    xch a, c
+    inc a
+    mov [.src], a
+    mov a, d
+    addc a, 0
+    mov [.src + 1], a
+    mov a, c
+
+    mov c, [.dest]
+    mov d, [.dest + 1]
+    mov [cd], a
+    cmp a, 0
+    jz .end
+
+    mov a, c
+    inc a
+    mov [.dest], a
+    mov a, d
+    addc a, 0
+    mov [.dest + 1], a
+    jmp .loop
+.end:
+    ret 
+
+variable .src 2
+variable .dest 2
+

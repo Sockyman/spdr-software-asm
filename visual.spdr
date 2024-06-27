@@ -1,0 +1,328 @@
+once
+; Visual text editor.
+
+CLI_ROW = 1
+
+TEXT_SIZE = (MAX_LINE_COUNT + 1) * LINE_LEN
+
+include "stdlib/lcd.spdr"
+
+section "var"
+
+; visual
+lineno:
+    res 1
+
+line_count:
+    res 1
+
+shift.line:
+    res 1
+shift.char:
+    res 1
+shift.lptr:
+    res 2
+shift.sptr:
+    res 2
+shift.temp:
+    res LINE_LEN
+shift.exchange:
+    res 2
+
+lines:
+    res TEXT_SIZE
+
+section "code"
+
+
+include "cli.spdr"
+
+
+; both
+
+reset_visual:
+    mov a, 0
+    mov [lineno], a
+    mov [line_count], a
+
+    mov c, lines
+    mov d, lines >> 8
+    mov [line_ptr], c
+    mov [line_ptr + 1], d
+
+    mov a, LCD_LINE_2
+    mov [cli_line], a
+
+    call reset_cli
+
+    ret 
+
+; visual
+
+visual_editor:
+    call reset_cursor
+    call visual_redraw
+    call visual_loop
+    ret 
+
+; visual, cli
+
+visual_loop:
+    call cli_loop
+    cmp a, KEY_ENTER
+    jz .enter_pressed
+    cmp a, KEY_ESC
+    jz .esc_pressed
+    cmp a, KEY_UP
+    jz .up_pressed
+    cmp a, KEY_DOWN
+    jz .down_pressed
+    cmp a, KEY_DELETE
+    jz .delete_pressed
+    cmp a, KEY_INSERT
+    jz .insert_pressed
+    cmp a, KEY_SHIFT_INSERT
+    jz .shift_insert_pressed
+.up_pressed:
+    mov a, -1
+    call change_line
+    jmp .end
+.down_pressed:
+    mov a, 1
+    call change_line
+    jmp .end
+.enter_pressed:
+    mov a, 1
+    call insert_line
+    mov a, 0
+    call set_cursor
+    jmp .end
+.delete_pressed:
+    mov a, [line_ptr]
+    add a, LINE_LEN
+    mov c, a
+    mov a, [line_ptr + 1]
+    addc a, LINE_LEN >> 8
+    mov d, a
+    mov a, [lineno]
+    inc a
+    call shift.back
+    mov a, -1
+    call change_line
+    call visual_redraw 
+    jmp .end
+.insert_pressed:
+.shift_insert_pressed:
+    mov a, 0
+    call insert_line
+    jmp .end
+.esc_pressed:
+    ret 
+.end:
+    jmp visual_loop
+
+; visual
+
+insert_line:
+    mov c, a
+    mov a, [line_count]
+    inc a
+    cmp a, MAX_LINE_COUNT
+    jc .end
+    mov [line_count], a
+    mov a, c
+    cmp a, 1
+    jnz .no_change_line
+    call change_line
+.no_change_line:
+    mov c, [line_ptr]
+    mov d, [line_ptr + 1]
+    mov a, [lineno]
+    call shift.forward
+
+    mov c, [line_ptr]
+    mov d, [line_ptr + 1]
+    call clear_line
+
+    call visual_redraw
+.end:
+    ret 
+    
+
+; visual
+
+change_line:
+    cmp a, 0
+    jp .up
+.down:
+    mov a, [lineno]
+    dec a
+    jnc .end
+    mov [lineno], a
+    mov a, [line_ptr]
+    sub a, LINE_LEN
+    mov [line_ptr], a
+    mov a, [line_ptr + 1]
+    subb a, LINE_LEN >> 8
+    mov [line_ptr + 1], a
+    jmp .end
+.up:
+    mov a, [lineno]
+    cmp a, [line_count]
+    jc .end
+    inc a
+    mov [lineno], a
+    mov a, [line_ptr]
+    add a, LINE_LEN
+    mov [line_ptr], a
+    mov a, [line_ptr + 1]
+    addc a, LINE_LEN >> 8
+    mov [line_ptr + 1], a
+.end:
+    mov a, [lineno]
+    out a
+    call visual_redraw
+    ret 
+
+; both
+
+visual_redraw:
+    call cli_redraw
+    mov a, LCD_DDRAM
+    lcc a
+    mov a, [line_ptr]
+    sub a, LINE_LEN
+    mov c, a
+    mov a, [line_ptr + 1]
+    subb a, LINE_LEN >> 8
+    mov d, a
+    mov a, [lineno]
+    sub a, 0
+    jnz .not_before_first
+    mov c, message
+    mov d, message >> 8
+.not_before_first:
+    call print_string
+    call reset_cursor
+    ret 
+
+; replace
+
+
+; visual
+
+shift:
+.back:
+    mov [.line], a
+    mov [.lptr], c
+    mov [.lptr + 1], d
+    mov a, [line_count]
+    cmp a, 0
+    jz .return
+    mov a, [line_count]
+    inc a
+    sub a, [.line]
+    mov [.line], a
+    mov a, [.lptr]
+    sub a, LINE_LEN
+    mov [.sptr], a
+    mov a, [.lptr + 1]
+    subb a, LINE_LEN >> 8
+    mov [.sptr + 1], a
+..line_loop:
+    mov a, [.line]
+    dec a
+    jnc ..end
+    mov [.line], a
+    mov a, LINE_LEN
+    mov [.char], a
+..char_loop:
+    mov a, [.char]
+    dec a
+    jnc ..line_loop
+    mov [.char], a
+    mov c, [.lptr]
+    mov d, [.lptr + 1]
+    mov a, [cd]
+    inc c
+    mov [.lptr], c
+    incc d
+    mov [.lptr + 1], d
+    mov c, [.sptr]
+    mov d, [.sptr + 1]
+    mov [cd], a
+    inc c
+    mov [.sptr], c
+    incc d
+    mov [.sptr + 1], d
+    jmp ..char_loop
+..end:
+    mov a, [line_count]
+    dec a
+    mov [line_count], a
+    ret 
+
+.forward:
+    mov [.line], a
+    mov [.lptr], c
+    mov [.lptr + 1], d
+    mov a, [line_count]
+    cmp a, MAX_LINE_COUNT
+    jz .return
+    mov a, [line_count]
+    sub a, [.line]
+    inc a
+    mov [.line], a
+
+..line_loop:
+    mov a, [.line]
+    dec a
+    mov [.line], a
+    jnc ..end
+    mov c, .temp
+    mov d, .temp >> 8
+    mov [.sptr], c
+    mov [.sptr + 1], d
+    mov a, LINE_LEN
+    mov [.char], a
+..char_loop:
+    mov a, [.char]
+    dec a
+    jnc ..line_loop
+    mov [.char], a
+    mov c, [.lptr]
+    mov d, [.lptr + 1]
+    mov a, [cd]
+    mov [.exchange], a
+    
+    mov c, [.sptr]
+    mov d, [.sptr + 1]
+    mov a, [cd]
+    mov [.exchange + 1], a
+    mov a, [.exchange]
+    mov [cd], a
+    mov a, [.exchange + 1]
+
+    inc c
+    mov [.sptr], c
+    incc d
+    mov [.sptr + 1], d
+
+    mov c, [.lptr]
+    mov d, [.lptr + 1]
+    mov [cd], a
+
+    inc c
+    mov [.lptr], c
+    incc d
+    mov [.lptr + 1], d
+    jmp ..char_loop
+..end:
+.return:
+    ret 
+
+; visual
+
+message:
+    data "==========VISUAL"
+

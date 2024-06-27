@@ -1,0 +1,50 @@
+once
+
+macro call addr
+    phc
+    jmp MACRO.addr
+endmacro
+
+macro call cd
+    phc
+    jmp cd
+    nop
+    nop
+endmacro
+
+
+macro movw cd, value
+    mov c, MACRO.value
+    mov d, MACRO.value >> 8
+endmacro
+
+macro movw cd, [addr]
+    mov c, [MACRO.addr]
+    mov d, [MACRO.addr + 1]
+endmacro
+
+macro movw [addr], cd
+    mov [MACRO.addr], c
+    mov [MACRO.addr + 1], d
+endmacro
+
+
+macro incw cd
+    inc c
+    incc d
+endmacro
+
+macro incw [addr]
+    inc [addr]
+    incc [addr + 1]
+endmacro
+
+macro decw cd
+    dec c
+    decb d
+endmacro
+
+macro decw [addr]
+    dec [addr]
+    decb [addr + 1]
+endmacro

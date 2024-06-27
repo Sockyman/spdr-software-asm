@@ -1,0 +1,406 @@
+once
+include "kernel_io_symbols.spdr"
+
+CALC_STACK_SIZE = 256
+OPERATOR_STACK_SIZE = 16
+
+variable calc_temp 2
+
+variable calc_stack CALC_STACK_SIZE
+variable calc_stack_ptr 2
+variable stack_len 1
+
+variable operator_stack OPERATOR_STACK_SIZE
+variable operator_stack_ptr 2
+variable operator_stack_len 1
+
+calculator:
+    mov a, LCD_LINE_2
+    mov [cli_row], a
+
+    call clear_top
+calc_loop:
+    call reset_cli
+    call cli_redraw
+    call reset_cursor
+    
+    mov a, 0
+    mov [stack_len], a
+    mov [operator_stack_len], a
+
+    mov a, calc_stack
+    mov [calc_stack_ptr], a
+    mov a, calc_stack >> 8
+    mov [calc_stack_ptr + 1], a
+
+    mov a, operator_stack
+    mov [operator_stack_ptr], a
+    mov a, operator_stack >> 8
+    mov [operator_stack_ptr + 1], a
+
+    mov a, input_line
+    mov [parse_ptr], a
+    mov a, input_line >> 8
+    mov [parse_ptr + 1], a
+
+.cmd_loop:
+    call cli_loop
+    cmp a, KEY_ENTER
+    jz parse_expression
+    cmp a, KEY_ESC
+    jnz .cmd_loop
+    ret 
+
+parse_expression:
+    call clear_top
+    mov a, '='
+    lcd a
+parse_loop:
+    call peek_next
+    call is_decimal
+    jnz handle_int
+
+    cmp a, 0
+    jz done
+
+    call parser_inc
+
+    cmp a, ' '
+    jz parse_loop
+
+    cmp a, '('
+    jz handle_lparen
+    cmp a, ')'
+    jz handle_rparen
+
+    jmp handle_operator
+
+done:
+    call flush_operators
+    call pop_int
+    mov a, [stack_len]
+    cmp a, 0
+    mov a, c
+    mov c, d
+    out a
+    call print_decimal_16
+    jmp calc_loop
+
+
+handle_int:
+    call parse_dec
+    call push_int
+    jmp parse_loop
+
+handle_lparen:
+    mov a, OPERATOR_LPAREN
+    call push_operator
+    jmp parse_loop
+
+handle_rparen:
+    call peek_operator
+    cmp a, OPERATOR_LPAREN
+    jz .end
+    call apply_operator_stack
+    jmp handle_rparen
+.end:
+    call pop_operator
+    jmp parse_loop
+
+handle_operator:
+    call get_operator_index
+    mov c, a
+
+    mov a, OPERATOR_DATA_PRECEDENCE
+    call get_operator_data
+    mov [.op], c
+    mov [.op_prec], a
+
+.loop:
+    mov a, [operator_stack_len]
+    cmp a, 0
+    jz .end
+    call peek_operator
+    mov c, a
+    mov a, OPERATOR_DATA_PRECEDENCE
+    call get_operator_data
+
+    ;or  #0xfe
+    cmp a, [.op_prec]
+    jnc .end
+
+    call apply_operator_stack
+
+    jmp .loop
+.end:
+    mov a, [.op]
+    call push_operator
+    jmp parse_loop
+
+variable .op 1
+variable .op_prec 1
+
+
+clear_top:
+    mov a, LCD_DDRAM
+    lcc a
+    mov c, 16
+    mov a, ' '
+.loop:
+    lcd a
+    dec c
+    jnz .loop
+    mov a, LCD_DDRAM
+    lcc a
+    ret 
+    
+apply_operator_stack:
+    call pop_operator
+    call perform_operator
+    ret 
+
+flush_operators:
+    mov a, [operator_stack_len]
+    cmp a, 0
+    jz .end
+    call apply_operator_stack
+    jmp flush_operators
+.end:
+    ret 
+
+;
+; Handling Operators
+;
+
+perform_operator:
+    mov [.current_op], a
+    mov c, a
+    mov a, OPERATOR_DATA_OPERANDS
+    call get_operator_data
+    cmp a, 2
+    jnz .unary
+
+    call pop_int
+    mov [calc_temp], c
+    mov [calc_temp + 1], d
+.unary:
+    mov c, [.current_op]
+    mov a, OPERATOR_DATA_ADDRESS + 1
+    call get_operator_data
+    mov d, a
+    mov a, OPERATOR_DATA_ADDRESS
+    call get_operator_data
+    mov c, a
+    call cd
+
+    ret 
+
+variable .current_op 1
+
+op:
+.oneg:
+    call pop_int
+    mov a, c
+    not a
+    mov c, a
+    mov a, d
+    not a
+    mov d, a
+    inc c
+    incc d
+    jmp .end
+    
+.oadd:
+    call pop_int
+    mov a, c
+    add a, [calc_temp]
+    mov c, a
+    mov a, d
+    addc a, [calc_temp + 1]
+    mov d, a
+    jmp .end
+.osub:
+    call pop_int
+    mov a, c
+    sub a, [calc_temp]
+    mov c, a
+    mov a, d
+    subb a, [calc_temp + 1]
+    mov d, a
+    jmp .end
+
+.omul:
+    call .prep_math
+    call multiply_16
+    mov d, c
+    mov c, a
+    jmp .end
+.odiv:
+    call .prep_math
+    call divide_16
+    mov d, c
+    mov c, a
+    jmp .end
+.prep_math:
+    call pop_int
+    mov [math.number_1], c
+    mov [math.number_1 + 1], d
+    mov c, [calc_temp]
+    mov d, [calc_temp + 1]
+    mov [math.number_2], c
+    mov [math.number_2 + 1], d
+    ret 
+    
+
+.end:
+    call push_int
+    ret 
+
+; 
+; Operator Stack
+;
+
+OPERATOR_DATA_SIZE = 5
+OPERATOR_DATA_KEY = 0
+OPERATOR_DATA_PRECEDENCE = 1
+OPERATOR_DATA_OPERANDS = 2
+OPERATOR_DATA_ADDRESS = 3
+
+operator:
+;   byte SYMBOL, PRECEDENCE, OPERANDS
+;   word ADDRESS
+
+    data '_', 5, 1
+    dataw op.oneg
+
+    data '+', 2, 2
+    dataw op.oadd
+    data '-', 2, 2
+    dataw op.osub
+
+    data '*', 4, 2
+    dataw op.omul
+    data '/', 4, 2
+    dataw op.odiv
+.lparen:
+    data '(', 0, 0
+    dataw 0
+
+    data 0
+
+OPERATOR_LPAREN = operator.lparen - operator
+
+get_operator_index:
+    mov [.to_find], a
+    mov c, operator
+    mov d, operator >> 8
+.loop:
+    mov a, [cd]
+    cmp a, 0
+    jz .fail
+    cmp a, [.to_find]
+    jz .end
+    mov a, c
+    add a, OPERATOR_DATA_SIZE
+    incc d
+    mov c, a
+    jmp .loop
+.end:
+    mov a, c
+    sub a, operator
+    ret 
+.fail:
+    mov a, 0xfc
+    out a
+    mov f, 0xff
+    hlt 
+
+variable .to_find 1
+
+get_operator_data:
+    push d
+    mov [.index], c
+    mov d, operator >> 8
+    add a, operator
+    incc d
+    add a, [.index]
+    incc d
+    mov c, a
+    mov a, [cd]
+    mov c, [.index]
+    pop d
+    ret 
+
+variable .index 1
+
+push_operator:
+    mov c, [operator_stack_ptr]
+    mov d, [operator_stack_ptr + 1]
+    mov [cd], a
+    inc [operator_stack_ptr]
+    incc [operator_stack_ptr + 1]
+    inc [operator_stack_len]
+    ret 
+
+pop_operator:
+    dec [operator_stack_ptr]
+    decb [operator_stack_ptr + 1]
+    mov c, [operator_stack_ptr]
+    mov d, [operator_stack_ptr + 1]
+    mov a, [cd]
+    dec [operator_stack_len]
+    ret 
+
+peek_operator:
+    mov c, [operator_stack_ptr]
+    mov d, [operator_stack_ptr + 1]
+    dec c
+    decb d
+    mov a, [cd]
+    ret 
+
+;
+; Output Stack
+;
+
+push_int:
+    mov a, c
+    push d
+    mov c, [calc_stack_ptr]
+    mov d, [calc_stack_ptr + 1]
+    mov [cd], a
+    inc c
+    incc d
+    pop a
+    mov [cd], a
+    inc c
+    incc d
+    mov [calc_stack_ptr], c
+    mov [calc_stack_ptr + 1], d
+    inc [stack_len]
+    ret 
+
+pop_int:
+    mov c, [calc_stack_ptr]
+    mov d, [calc_stack_ptr + 1]
+    dec c
+    decb d
+    mov a, [cd]
+    push a
+    dec c
+    decb d
+    mov a, [cd]
+    mov [calc_stack_ptr], c
+    mov [calc_stack_ptr + 1], d
+    mov c, a
+    pop d
+    dec [stack_len]
+    ret 
+    
+include "stdlib/parse_dec.spdr"
+include "stdlib/is_decimal.spdr"
+include "stdlib/multiply_16.spdr"
+include "stdlib/divide_16.spdr"
+include "stdlib/print_decimal_16.spdr"
+include "cli.spdr"
+

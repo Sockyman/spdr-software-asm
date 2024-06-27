@@ -1,0 +1,172 @@
+once
+
+include "stdlib/keycode.spdr"
+
+disassembler:
+    mov c, [addr]
+    mov d, [addr + 1]
+    mov a, [cd]
+    mov a, LCD_DDRAM
+    lcc a
+    call dissasemble_line
+    mov [next_ins], c
+    mov [next_ins + 1], d
+    mov a, LCD_DDRAM | LCD_LINE_2
+    lcc a
+    call dissasemble_line
+
+.key_loop:
+    call getc
+    cmp a, KEY_ESC
+    jz .esc_pressed
+    cmp a, KEY_ENTER
+    jz .enter_pressed
+    cmp a, KEY_RIGHT
+    jz .right_pressed
+    cmp a, KEY_LEFT
+    jz .left_pressed
+
+    jmp .key_loop
+.esc_pressed:
+    ret 
+
+.enter_pressed:
+    mov a, [next_ins]
+    mov [addr], a
+    mov a, [next_ins + 1]
+    mov [addr + 1], a
+    jmp .end
+
+.right_pressed:
+    inc [addr]
+    incc [addr + 1]
+    jmp .end
+
+.left_pressed:
+    dec [addr]
+    decb [addr + 1]
+    jmp .end
+
+.end:
+    jmp disassembler
+
+variable next_ins 2
+
+
+dissasemble_line:
+    mov a, d
+    call print_hex_8
+    mov a, c
+    call print_hex_8
+
+    mov a, ' '
+    lcd a
+
+    mov a, [cd]
+
+    inc c
+    incc d
+    mov [.current_addr], c
+    mov [.current_addr + 1], d
+
+    call get_instruction
+
+    mov a, INS_STRING_LEN
+    mov [.count], a
+.print_loop:
+    dec [.count]
+    jnc ..print_done
+
+    mov a, [cd]
+    lcd a
+    inc c
+    incc d
+    jmp .print_loop
+..print_done:
+    mov a, ' '
+    lcd a
+
+.print_args:
+    mov a, [cd]
+    cmp a, 1
+
+    mov c, [.current_addr]
+    mov d, [.current_addr + 1]
+
+    jnc ..implied
+    jz ..immediate
+..direct:
+    mov a, [cd]
+    inc c
+    incc d
+    push a
+    mov a, [cd]
+    inc c
+    incc d
+    call print_hex_8
+    pop a
+    call print_hex_8
+    mov a, 1
+    call fill_spaces
+    jmp ..done
+..immediate:
+    mov a, [cd]
+    inc c
+    incc d
+    call print_hex_8
+    mov a, 3
+    call fill_spaces
+    jmp ..done
+..implied:
+    mov a, 5
+    call fill_spaces
+..done:
+    ret 
+
+
+variable .count 1
+variable .current_addr 2
+
+fill_spaces:
+    push c
+    mov c, a
+    mov a, ' '
+.loop:
+    dec c
+    jnc .end
+    lcd a
+    jmp .loop
+.end:
+    pop c
+    ret 
+
+get_instruction:
+    shl a
+    mov [.acc], a
+    mov a, 0
+    rol a
+    mov [.acc + 1], a
+    mov a, [.acc]
+    shl a
+    mov c, a
+    mov a, [.acc + 1]
+    rol a
+    mov d, a
+
+    mov a, c
+    add a, [.acc]
+    mov c, a
+    mov a, d
+    addc a, [.acc + 1]
+    mov d, a
+
+    mov a, c
+    add a, instruction_set
+    mov c, a
+    mov a, d
+    addc a, instruction_set >> 8
+    mov d, a
+
+    ret 
+
+variable .acc 2

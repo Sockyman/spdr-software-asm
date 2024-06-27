@@ -1,0 +1,12 @@
+once
+
+include "stdlib/print_hex_8.spdr"
+
+print_hex_16:
+    push a
+    mov a, c
+    call print_hex
+    pop a
+    call print_hex
+    ret 
+

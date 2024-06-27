@@ -1,0 +1,113 @@
+once
+include "stdlib/float.spdr"
+
+float_add:
+; B<0
+    mov a, MANT_SIGN
+    bit a, [f1.exp]
+    jnz right_side
+left_side:
+; A<0
+    bit a, [f0.exp]
+    jz addf2
+
+    call subf2
+; ANS = -ANS
+    mov a, [f0.exp]
+    xor a, MANT_SIGN
+    mov [f0.exp], a
+    ret 
+
+float_sub:
+; B<0
+    mov a, MANT_SIGN
+    bit a, [f1.exp]
+    jnz left_side
+right_side:
+; A<0
+    bit a, [f0.exp]
+    jz subf2
+
+    call addf2
+; ANS = -ANS
+    mov a, [f0.exp]
+    xor a, MANT_SIGN
+    mov [f0.exp], a
+    ret 
+
+addf2:
+    call fixup
+    mov a, [f0.mant]
+    add a, [f1.mant]
+    mov [f0.mant], a
+    mov a, [f0.mant + 1]
+    addc a, [f1.mant + 1]
+    mov [f0.mant + 1], a
+    jnc .end
+
+    ror [f0.mant + 1]
+    ror [f0.mant]
+    inc [f0.exp]
+.end:
+    ret 
+
+subf2:
+    call fixup
+    mov a, [f1.mant]
+    sub a, [f0.mant]
+    mov [f0.mant], a
+    mov a, [f1.mant + 1]
+    subb a, [f0.mant + 1]
+    mov [f0.mant + 1], a
+    jc .end
+
+    mov a, [f0.mant]
+    not a
+    mov [f0.mant], a
+    mov a, [f0.mant + 1]
+    not a
+    mov [f0.mant + 1], a
+    inc [f0.mant]
+    incc [f0.mant + 1]
+
+    mov a, [f0.exp]
+    or a, MANT_SIGN ; 'or' or 'xor'?
+    mov [f0.exp], a
+.end:
+    call normal
+    ret 
+
+fixup:
+.f0_greater:
+; EXP_0 > EXP_1
+    mov a, [f1.exp]
+    and a, EXP
+    mov [ftemp], a
+    mov a, [f0.exp]
+    and a, EXP
+    cmp a, [ftemp]
+    jnc .f1_greater ; no
+    jz .done ; equal
+; EXP_1+=1
+    inc [f1.exp]
+; MANT_1/=2
+    shr [f1.mant + 1]
+    ror [f1.mant]
+    jmp .f0_greater
+.f1_greater:
+; EXP_0 < EXP_1
+    mov a, [f1.exp]
+    and a, EXP
+    mov [ftemp], a
+    mov a, [f0.exp]
+    and a, EXP
+    cmp a, [ftemp]
+    jc .done ; no
+; EXP_0+=1
+    inc [f0.exp]
+; MANT_0/=2
+    shr [f0.mant + 1]
+    ror [f0.mant]
+    jmp .f1_greater
+.done:
+    ret 

@@ -1,0 +1,33 @@
+once
+
+include "stdlib/divide_16.spdr"
+
+print_decimal_16:
+    mov [math.number_1], a
+    mov [math.number_1 + 1], c
+    mov a, 10
+    mov c, 0
+    mov [math.number_2], a
+    mov [math.number_2 + 1], c
+    mov d, 0
+.get_digit:
+    push d
+    call divide_16
+    pop d
+    mov a, [math.remainder]
+    push a
+    inc d
+    mov a, [math.number_1]
+    sub a, 0
+    jnz .get_digit
+    mov a, [math.number_1+1]
+    sub a, 0
+    jnz .get_digit
+.print:
+    pop a
+    add a, '0'
+    lcd a
+    dec d
+    jnz .print
+    ret 
+

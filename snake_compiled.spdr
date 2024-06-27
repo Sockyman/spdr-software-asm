@@ -1,0 +1,1475 @@
+once
+
+    call main_
+    hlt
+
+include "stdlib/lcd_init.spdr"
+lcd_init_:
+    mov a, [lcd_init_._param_0 + 0]
+    call lcd_init
+    ret 
+lcd_command_:
+; (inline asm) /home/sockyman/src/spdr-software/stdlib/bs/lcd/lcd_command.bs:8
+
+    mov a, [.command]
+    lcc a
+
+; (end inline asm) /home/sockyman/src/spdr-software/stdlib/bs/lcd/lcd_command.bs:11
+    ret 
+cursor_:
+    mov c, (6) >> 0
+    mov a, [(cursor_.line) + 0]
+    mov d, [(cursor_.line) + 1]
+cursor_._lbl_0:
+    dec c
+    jnc cursor_._lbl_1
+    shl a
+    xch a, d
+    rol a
+    xch a, d
+    jmp cursor_._lbl_0
+cursor_._lbl_1:
+    mov [cursor_._tmp_0 + 0], a
+    mov a, d
+    mov [cursor_._tmp_0 + 1], a
+    mov a, (128) >> 0
+    or a, [cursor_._tmp_0 + 0]
+    mov [cursor_._tmp_1 + 0], a
+    mov a, (128) >> 8
+    or a, [cursor_._tmp_0 + 1]
+    mov [cursor_._tmp_1 + 1], a
+    mov a, [cursor_._tmp_1 + 0]
+    or a, [(cursor_.char) + 0]
+    mov [lcd_command_._param_0 + 0], a
+    mov a, [cursor_._tmp_1 + 1]
+    or a, [(cursor_.char) + 1]
+    mov [lcd_command_._param_0 + 1], a
+    call lcd_command_
+    ret 
+putc_:
+; (inline asm) /home/sockyman/src/spdr-software/stdlib/bs/print/putc.bs:8
+
+    mov a, [.c]
+    lcd a
+
+; (end inline asm) /home/sockyman/src/spdr-software/stdlib/bs/print/putc.bs:11
+    ret 
+include "stdlib/print_string.spdr"
+puts_:
+    mov c, [puts_._param_0 + 0]
+    mov d, [puts_._param_0 + 1]
+    call print_string
+    ret 
+include "stdlib/read_scancode.spdr"
+read_scancode_:
+    call read_scancode
+    mov [_return + 0], a
+    mov a, 0
+    mov [_return + 1], a
+    ret 
+include "stdlib/print_decimal_16.spdr"
+putd_:
+    mov a, [putd_._param_0 + 0]
+    mov c, [putd_._param_0 + 1]
+    call print_decimal_16
+    ret 
+set_:
+    mov a, [(set_.num) + 0]
+    shl a
+    mov [set_._tmp_0 + 0], a
+    mov a, [(set_.num) + 1]
+    rol a
+    mov [set_._tmp_0 + 1], a
+    mov a, [(set_.dest) + 0]
+    add a, [set_._tmp_0 + 0]
+    mov [(set_.num) + 0], a
+    mov a, [(set_.dest) + 1]
+    addc a, [set_._tmp_0 + 1]
+    mov [(set_.num) + 1], a
+set_._lbl_2:
+    mov a, [(set_.dest) + 0]
+    cmp a, [(set_.num) + 0]
+    mov a, [(set_.dest) + 1]
+    subb a, [(set_.num) + 1]
+    mov a, f
+    not a
+    and a, 8
+    mov [_condition + 0], a
+    or a, [_condition + 0]
+    jz set_._lbl_3
+    mov c, [(set_.dest) + 0]
+    mov d, [(set_.dest) + 1]
+    mov a, [(set_.value) + 0]
+    mov [cd], a
+    inc c
+    jnc set_._lbl_4
+    inc d
+set_._lbl_4:
+    mov a, [(set_.value) + 1]
+    mov [cd], a
+    mov a, [(set_.dest) + 0]
+    add a, (2) >> 0
+    mov [(set_.dest) + 0], a
+    mov a, [(set_.dest) + 1]
+    addc a, (2) >> 8
+    mov [(set_.dest) + 1], a
+    jmp set_._lbl_2
+set_._lbl_3:
+    ret 
+set_char_:
+; (inline asm) /home/sockyman/src/spdr-software/stdlib/bs/lcd/set_char.bs:9
+
+    mov a, [.char]
+    shl a
+    shl a
+    shl a
+    or a, 0b01000000
+    mov [.char], a
+    mov a, 7
+.loop:
+    mov [.line], a
+    or a, [.char]
+    lcc a
+    mov a, [.data]
+    add a, [.line]
+    mov c, a
+    mov a, [.data + 1]
+    addc a, 0
+    mov d, a
+    mov a, [cd]
+    lcd a
+    mov a, [.line]
+    dec a
+    jc .loop
+    mov a, 0b10000000
+    lcc a
+
+; (end inline asm) /home/sockyman/src/spdr-software/stdlib/bs/lcd/set_char.bs:34
+    ret 
+set_pixel_:
+    mov a, [(set_pixel_.x) + 0]
+    shl a
+    mov [set_pixel_._tmp_0 + 0], a
+    mov a, [(set_pixel_.x) + 1]
+    rol a
+    mov [set_pixel_._tmp_0 + 1], a
+    mov a, _lbl_5 >> 0
+    add a, [set_pixel_._tmp_0 + 0]
+    mov [set_pixel_._tmp_1 + 0], a
+    mov a, _lbl_5 >> 8
+    addc a, [set_pixel_._tmp_0 + 1]
+    mov [set_pixel_._tmp_1 + 1], a
+    mov c, [set_pixel_._tmp_1 + 0]
+    mov d, [set_pixel_._tmp_1 + 1]
+    mov a, [cd]
+    mov [set_pixel_._tmp_2 + 0], a
+    inc c
+    jnc set_pixel_._lbl_6
+    inc d
+set_pixel_._lbl_6:
+    mov a, [cd]
+    mov [set_pixel_._tmp_2 + 1], a
+    mov a, [set_pixel_._tmp_2 + 0]
+    add a, [(set_pixel_.y) + 0]
+    mov [(set_pixel_.byte) + 0], a
+    mov a, [set_pixel_._tmp_2 + 1]
+    addc a, [(set_pixel_.y) + 1]
+    mov [(set_pixel_.byte) + 1], a
+    mov a, [(set_pixel_.x) + 0]
+    shl a
+    mov [set_pixel_._tmp_0 + 0], a
+    mov a, [(set_pixel_.x) + 1]
+    rol a
+    mov [set_pixel_._tmp_0 + 1], a
+    mov a, _lbl_7 >> 0
+    add a, [set_pixel_._tmp_0 + 0]
+    mov [set_pixel_._tmp_1 + 0], a
+    mov a, _lbl_7 >> 8
+    addc a, [set_pixel_._tmp_0 + 1]
+    mov [set_pixel_._tmp_1 + 1], a
+    mov c, [set_pixel_._tmp_1 + 0]
+    mov d, [set_pixel_._tmp_1 + 1]
+    mov a, [cd]
+    mov [(set_pixel_.bit) + 0], a
+    inc c
+    jnc set_pixel_._lbl_8
+    inc d
+set_pixel_._lbl_8:
+    mov a, [cd]
+    mov [(set_pixel_.bit) + 1], a
+    mov a, [(set_pixel_.value) + 0]
+    mov [_condition + 0], a
+    mov a, [(set_pixel_.value) + 1]
+    or a, [_condition + 0]
+    jz set_pixel_._lbl_10
+    mov a, [(bitmap) + 0]
+    add a, [(set_pixel_.byte) + 0]
+    mov [set_pixel_._tmp_0 + 0], a
+    mov a, [(bitmap) + 1]
+    addc a, [(set_pixel_.byte) + 1]
+    mov [set_pixel_._tmp_0 + 1], a
+    mov a, [(bitmap) + 0]
+    add a, [(set_pixel_.byte) + 0]
+    mov [set_pixel_._tmp_1 + 0], a
+    mov a, [(bitmap) + 1]
+    addc a, [(set_pixel_.byte) + 1]
+    mov [set_pixel_._tmp_1 + 1], a
+    mov c, [set_pixel_._tmp_1 + 0]
+    mov d, [set_pixel_._tmp_1 + 1]
+    mov a, [cd]
+    mov [set_pixel_._tmp_2 + 0], a
+    inc c
+    jnc set_pixel_._lbl_11
+    inc d
+set_pixel_._lbl_11:
+    mov a, [cd]
+    mov [set_pixel_._tmp_2 + 1], a
+    mov a, [set_pixel_._tmp_2 + 0]
+    or a, [(set_pixel_.bit) + 0]
+    mov [set_pixel_._tmp_3 + 0], a
+    mov a, [set_pixel_._tmp_2 + 1]
+    or a, [(set_pixel_.bit) + 1]
+    mov [set_pixel_._tmp_3 + 1], a
+    mov c, [set_pixel_._tmp_0 + 0]
+    mov d, [set_pixel_._tmp_0 + 1]
+    mov a, [set_pixel_._tmp_3 + 0]
+    mov [cd], a
+    inc c
+    jnc set_pixel_._lbl_12
+    inc d
+set_pixel_._lbl_12:
+    mov a, [set_pixel_._tmp_3 + 1]
+    mov [cd], a
+    jmp set_pixel_._lbl_9
+set_pixel_._lbl_10:
+    mov a, [(bitmap) + 0]
+    add a, [(set_pixel_.byte) + 0]
+    mov [set_pixel_._tmp_0 + 0], a
+    mov a, [(bitmap) + 1]
+    addc a, [(set_pixel_.byte) + 1]
+    mov [set_pixel_._tmp_0 + 1], a
+    mov a, [(bitmap) + 0]
+    add a, [(set_pixel_.byte) + 0]
+    mov [set_pixel_._tmp_1 + 0], a
+    mov a, [(bitmap) + 1]
+    addc a, [(set_pixel_.byte) + 1]
+    mov [set_pixel_._tmp_1 + 1], a
+    mov c, [set_pixel_._tmp_1 + 0]
+    mov d, [set_pixel_._tmp_1 + 1]
+    mov a, [cd]
+    mov [set_pixel_._tmp_2 + 0], a
+    inc c
+    jnc set_pixel_._lbl_13
+    inc d
+set_pixel_._lbl_13:
+    mov a, [cd]
+    mov [set_pixel_._tmp_2 + 1], a
+    mov a, [(set_pixel_.bit) + 0]
+    not a
+    mov [set_pixel_._tmp_3 + 0], a
+    mov a, [(set_pixel_.bit) + 1]
+    not a
+    mov [set_pixel_._tmp_3 + 1], a
+    mov a, [set_pixel_._tmp_2 + 0]
+    and a, [set_pixel_._tmp_3 + 0]
+    mov [set_pixel_._tmp_4 + 0], a
+    mov a, [set_pixel_._tmp_2 + 1]
+    and a, [set_pixel_._tmp_3 + 1]
+    mov [set_pixel_._tmp_4 + 1], a
+    mov c, [set_pixel_._tmp_0 + 0]
+    mov d, [set_pixel_._tmp_0 + 1]
+    mov a, [set_pixel_._tmp_4 + 0]
+    mov [cd], a
+    inc c
+    jnc set_pixel_._lbl_14
+    inc d
+set_pixel_._lbl_14:
+    mov a, [set_pixel_._tmp_4 + 1]
+    mov [cd], a
+set_pixel_._lbl_9:
+    ret 
+render_:
+    mov a, _lbl_15 >> 0
+    mov [(bitmap) + 0], a
+    mov a, _lbl_15 >> 8
+    mov [(bitmap) + 1], a
+    mov a, (0) >> 0
+    mov [(render_.i) + 0], a
+    mov a, (0) >> 8
+    mov [(render_.i) + 1], a
+render_._lbl_17:
+    mov a, [(render_.i) + 0]
+    cmp a, (8) >> 0
+    mov a, [(render_.i) + 1]
+    subb a, (8) >> 8
+    mov a, f
+    not a
+    and a, 8
+    mov [_condition + 0], a
+    or a, [_condition + 0]
+    jz render_._lbl_16
+    mov a, [(render_.i) + 0]
+    mov [putc_._param_0 + 0], a
+    mov a, [(render_.i) + 1]
+    mov [putc_._param_0 + 1], a
+    call putc_
+    mov a, [(render_.i) + 0]
+    add a, (2) >> 0
+    mov [(render_.i) + 0], a
+    mov a, [(render_.i) + 1]
+    addc a, (2) >> 8
+    mov [(render_.i) + 1], a
+    jmp render_._lbl_17
+render_._lbl_16:
+    mov a, (1) >> 0
+    mov [cursor_._param_0 + 0], a
+    mov a, (1) >> 8
+    mov [cursor_._param_0 + 1], a
+    mov a, (0) >> 0
+    mov [cursor_._param_1 + 0], a
+    mov a, (0) >> 8
+    mov [cursor_._param_1 + 1], a
+    call cursor_
+    mov a, (1) >> 0
+    mov [(render_.i) + 0], a
+    mov a, (1) >> 8
+    mov [(render_.i) + 1], a
+render_._lbl_19:
+    mov a, [(render_.i) + 0]
+    cmp a, (8) >> 0
+    mov a, [(render_.i) + 1]
+    subb a, (8) >> 8
+    mov a, f
+    not a
+    and a, 8
+    mov [_condition + 0], a
+    or a, [_condition + 0]
+    jz render_._lbl_18
+    mov a, [(render_.i) + 0]
+    mov [putc_._param_0 + 0], a
+    mov a, [(render_.i) + 1]
+    mov [putc_._param_0 + 1], a
+    call putc_
+    mov a, [(render_.i) + 0]
+    add a, (2) >> 0
+    mov [(render_.i) + 0], a
+    mov a, [(render_.i) + 1]
+    addc a, (2) >> 8
+    mov [(render_.i) + 1], a
+    jmp render_._lbl_19
+render_._lbl_18:
+    ret 
+redraw_:
+    mov a, [(bitmap) + 0]
+    mov [(redraw_.addr) + 0], a
+    mov a, [(bitmap) + 1]
+    mov [(redraw_.addr) + 1], a
+    mov a, (0) >> 0
+    mov [(redraw_.i) + 0], a
+    mov a, (0) >> 8
+    mov [(redraw_.i) + 1], a
+redraw_._lbl_21:
+    mov a, [(redraw_.i) + 0]
+    cmp a, (8) >> 0
+    mov a, [(redraw_.i) + 1]
+    subb a, (8) >> 8
+    mov a, f
+    not a
+    and a, 8
+    mov [_condition + 0], a
+    or a, [_condition + 0]
+    jz redraw_._lbl_20
+    mov a, [(redraw_.i) + 0]
+    mov [set_char_._param_0 + 0], a
+    mov a, [(redraw_.i) + 1]
+    mov [set_char_._param_0 + 1], a
+    mov a, [(redraw_.addr) + 0]
+    mov [set_char_._param_1 + 0], a
+    mov a, [(redraw_.addr) + 1]
+    mov [set_char_._param_1 + 1], a
+    call set_char_
+    mov a, [(redraw_.addr) + 0]
+    add a, ((4) * (2)) >> 0
+    mov [(redraw_.addr) + 0], a
+    mov a, [(redraw_.addr) + 1]
+    addc a, ((4) * (2)) >> 8
+    mov [(redraw_.addr) + 1], a
+    mov a, [(redraw_.i) + 0]
+    add a, (1) >> 0
+    mov [(redraw_.i) + 0], a
+    mov a, [(redraw_.i) + 1]
+    addc a, (1) >> 8
+    mov [(redraw_.i) + 1], a
+    jmp redraw_._lbl_21
+redraw_._lbl_20:
+    ret 
+clear_screen_:
+    mov a, [(bitmap) + 0]
+    mov [set_._param_0 + 0], a
+    mov a, [(bitmap) + 1]
+    mov [set_._param_0 + 1], a
+    mov a, (0) >> 0
+    mov [set_._param_1 + 0], a
+    mov a, (0) >> 8
+    mov [set_._param_1 + 1], a
+    mov a, ((8) * (4)) >> 0
+    mov [set_._param_2 + 0], a
+    mov a, ((8) * (4)) >> 8
+    mov [set_._param_2 + 1], a
+    call set_
+    ret 
+out_:
+; (inline asm) /home/sockyman/src/spdr-software/stdlib/bs/out.bs:6
+
+    mov a, [.x]
+    out a
+
+; (end inline asm) /home/sockyman/src/spdr-software/stdlib/bs/out.bs:9
+    ret 
+include "stdlib/multiply_16.spdr"
+mul_:
+mul_._param_0 = math.number_1
+mul_._param_1 = math.number_2
+    call multiply_16
+    mov [_return + 0], a
+    mov [_return + 1], c
+    ret 
+rand_:
+    mov a, (55797) >> 0
+    mov [mul_._param_0 + 0], a
+    mov a, (55797) >> 8
+    mov [mul_._param_0 + 1], a
+    mov a, [(seed) + 0]
+    mov [mul_._param_1 + 0], a
+    mov a, [(seed) + 1]
+    mov [mul_._param_1 + 1], a
+    call mul_
+    mov a, [_return + 0]
+    mov [rand_._tmp_0 + 0], a
+    mov a, [_return + 1]
+    mov [rand_._tmp_0 + 1], a
+    mov a, [rand_._tmp_0 + 0]
+    add a, (7473) >> 0
+    mov [(seed) + 0], a
+    mov a, [rand_._tmp_0 + 1]
+    addc a, (7473) >> 8
+    mov [(seed) + 1], a
+    mov a, [(seed) + 0]
+    mov [_return + 0], a
+    mov a, [(seed) + 1]
+    mov [_return + 1], a
+    ret 
+    ret 
+include "stdlib/divide_16.spdr"
+mod_:
+mod_._param_0 = math.number_1
+mod_._param_1 = math.number_2
+    call divide_16
+    mov a, [math.remainder + 0]
+    mov [_return + 0], a
+    mov a, [math.remainder + 1]
+    mov [_return + 1], a
+    ret 
+main_:
+    mov a, (0) >> 0
+    mov [lcd_init_._param_0 + 0], a
+    mov a, (0) >> 8
+    mov [lcd_init_._param_0 + 1], a
+    call lcd_init_
+    call render_
+    call clear_screen_
+    mov a, (0) >> 0
+    mov [cursor_._param_0 + 0], a
+    mov a, (0) >> 8
+    mov [cursor_._param_0 + 1], a
+    mov a, (4) >> 0
+    mov [cursor_._param_1 + 0], a
+    mov a, (4) >> 8
+    mov [cursor_._param_1 + 1], a
+    call cursor_
+    mov a, (255) >> 0
+    mov [putc_._param_0 + 0], a
+    mov a, (255) >> 8
+    mov [putc_._param_0 + 1], a
+    call putc_
+    mov a, _lbl_22 >> 0
+    mov [puts_._param_0 + 0], a
+    mov a, _lbl_22 >> 8
+    mov [puts_._param_0 + 1], a
+    call puts_
+    mov a, (1) >> 0
+    mov [cursor_._param_0 + 0], a
+    mov a, (1) >> 8
+    mov [cursor_._param_0 + 1], a
+    mov a, (4) >> 0
+    mov [cursor_._param_1 + 0], a
+    mov a, (4) >> 8
+    mov [cursor_._param_1 + 1], a
+    call cursor_
+    mov a, (255) >> 0
+    mov [putc_._param_0 + 0], a
+    mov a, (255) >> 8
+    mov [putc_._param_0 + 1], a
+    call putc_
+    mov a, _lbl_23 >> 0
+    mov [puts_._param_0 + 0], a
+    mov a, _lbl_23 >> 8
+    mov [puts_._param_0 + 1], a
+    call puts_
+    mov a, _lbl_24 >> 0
+    mov [(board) + 0], a
+    mov a, _lbl_24 >> 8
+    mov [(board) + 1], a
+    mov a, [(board) + 0]
+    mov [set_._param_0 + 0], a
+    mov a, [(board) + 1]
+    mov [set_._param_0 + 1], a
+    mov a, (0) >> 0
+    mov [set_._param_1 + 0], a
+    mov a, (0) >> 8
+    mov [set_._param_1 + 1], a
+    mov a, ((20) * (16)) >> 0
+    mov [set_._param_2 + 0], a
+    mov a, ((20) * (16)) >> 8
+    mov [set_._param_2 + 1], a
+    call set_
+    mov a, _lbl_25 >> 0
+    mov [(segments_x) + 0], a
+    mov a, _lbl_25 >> 8
+    mov [(segments_x) + 1], a
+    mov a, _lbl_26 >> 0
+    mov [(segments_y) + 0], a
+    mov a, _lbl_26 >> 8
+    mov [(segments_y) + 1], a
+    mov a, (1) >> 0
+    mov [(main_.length) + 0], a
+    mov a, (1) >> 8
+    mov [(main_.length) + 1], a
+    mov a, [(main_.length) + 0]
+    mov [set_score_._param_0 + 0], a
+    mov a, [(main_.length) + 1]
+    mov [set_score_._param_0 + 1], a
+    call set_score_
+    mov a, (0) >> 0
+    mov [(main_.offset) + 0], a
+    mov a, (0) >> 8
+    mov [(main_.offset) + 1], a
+    mov a, (10) >> 0
+    mov [(main_.x_head) + 0], a
+    mov a, (10) >> 8
+    mov [(main_.x_head) + 1], a
+    mov a, (8) >> 0
+    mov [(main_.y_head) + 0], a
+    mov a, (8) >> 8
+    mov [(main_.y_head) + 1], a
+    mov a, (1) >> 0
+    mov [(main_.x_mov) + 0], a
+    mov a, (1) >> 8
+    mov [(main_.x_mov) + 1], a
+    mov a, (0) >> 0
+    mov [(main_.y_mov) + 0], a
+    mov a, (0) >> 8
+    mov [(main_.y_mov) + 1], a
+    call place_apple_
+    mov a, (0) >> 0
+    mov [(main_.last_scancode) + 0], a
+    mov a, (0) >> 8
+    mov [(main_.last_scancode) + 1], a
+main_._lbl_27:
+    mov a, (1) >> 0
+    mov [_condition + 0], a
+    mov a, (1) >> 8
+    or a, [_condition + 0]
+    jz main_._lbl_28
+main_._lbl_29:
+    call read_scancode_
+    mov a, [_return + 0]
+    mov [(main_.scancode) + 0], a
+    mov a, [_return + 1]
+    mov [(main_.scancode) + 1], a
+    mov a, [(main_.scancode) + 0]
+    mov [_condition + 0], a
+    mov a, [(main_.scancode) + 1]
+    or a, [_condition + 0]
+    jz main_._lbl_30
+    mov a, [(main_.last_scancode) + 0]
+    cmp a, (240) >> 0
+    jnz main_._lbl_33
+    mov a, [(main_.last_scancode) + 1]
+    subb a, (240) >> 8
+main_._lbl_33:
+    mov [_condition + 0], a
+    or a, [_condition + 0]
+    jz main_._lbl_31
+    mov a, [(main_.y_mov) + 0]
+    mov [_condition + 0], a
+    mov a, [(main_.y_mov) + 1]
+    or a, [_condition + 0]
+    jz main_._lbl_35
+    mov a, [(main_.scancode) + 0]
+    cmp a, (107) >> 0
+    jnz main_._lbl_38
+    mov a, [(main_.scancode) + 1]
+    subb a, (107) >> 8
+main_._lbl_38:
+    mov a, f
+    and a, 4
+    mov [_condition + 0], a
+    or a, [_condition + 0]
+    jz main_._lbl_37
+    mov a, (-(1)) >> 0
+    mov [(main_.x_mov) + 0], a
+    mov a, (-(1)) >> 8
+    mov [(main_.x_mov) + 1], a
+    mov a, (0) >> 0
+    mov [(main_.y_mov) + 0], a
+    mov a, (0) >> 8
+    mov [(main_.y_mov) + 1], a
+    jmp main_._lbl_36
+main_._lbl_37:
+    mov a, [(main_.scancode) + 0]
+    cmp a, (116) >> 0
+    jnz main_._lbl_41
+    mov a, [(main_.scancode) + 1]
+    subb a, (116) >> 8
+main_._lbl_41:
+    mov a, f
+    and a, 4
+    mov [_condition + 0], a
+    or a, [_condition + 0]
+    jz main_._lbl_39
+    mov a, (1) >> 0
+    mov [(main_.x_mov) + 0], a
+    mov a, (1) >> 8
+    mov [(main_.x_mov) + 1], a
+    mov a, (0) >> 0
+    mov [(main_.y_mov) + 0], a
+    mov a, (0) >> 8
+    mov [(main_.y_mov) + 1], a
+main_._lbl_39:
+main_._lbl_36:
+    jmp main_._lbl_34
+main_._lbl_35:
+    mov a, [(main_.scancode) + 0]
+    cmp a, (117) >> 0
+    jnz main_._lbl_44
+    mov a, [(main_.scancode) + 1]
+    subb a, (117) >> 8
+main_._lbl_44:
+    mov a, f
+    and a, 4
+    mov [_condition + 0], a
+    or a, [_condition + 0]
+    jz main_._lbl_43
+    mov a, (0) >> 0
+    mov [(main_.x_mov) + 0], a
+    mov a, (0) >> 8
+    mov [(main_.x_mov) + 1], a
+    mov a, (-(1)) >> 0
+    mov [(main_.y_mov) + 0], a
+    mov a, (-(1)) >> 8
+    mov [(main_.y_mov) + 1], a
+    jmp main_._lbl_42
+main_._lbl_43:
+    mov a, [(main_.scancode) + 0]
+    cmp a, (114) >> 0
+    jnz main_._lbl_47
+    mov a, [(main_.scancode) + 1]
+    subb a, (114) >> 8
+main_._lbl_47:
+    mov a, f
+    and a, 4
+    mov [_condition + 0], a
+    or a, [_condition + 0]
+    jz main_._lbl_45
+    mov a, (0) >> 0
+    mov [(main_.x_mov) + 0], a
+    mov a, (0) >> 8
+    mov [(main_.x_mov) + 1], a
+    mov a, (1) >> 0
+    mov [(main_.y_mov) + 0], a
+    mov a, (1) >> 8
+    mov [(main_.y_mov) + 1], a
+main_._lbl_45:
+main_._lbl_42:
+main_._lbl_34:
+main_._lbl_31:
+    mov a, [(main_.scancode) + 0]
+    mov [(main_.last_scancode) + 0], a
+    mov a, [(main_.scancode) + 1]
+    mov [(main_.last_scancode) + 1], a
+    jmp main_._lbl_29
+main_._lbl_30:
+    mov a, [(main_.x_head) + 0]
+    add a, [(main_.x_mov) + 0]
+    mov [(main_.x_new) + 0], a
+    mov a, [(main_.x_head) + 1]
+    addc a, [(main_.x_mov) + 1]
+    mov [(main_.x_new) + 1], a
+    mov a, (19) >> 0
+    cmp a, [(main_.x_new) + 0]
+    mov a, (19) >> 8
+    subb a, [(main_.x_new) + 1]
+    mov a, f
+    not a
+    and a, 8
+    mov [_condition + 0], a
+    or a, [_condition + 0]
+    jz main_._lbl_48
+    mov a, [(main_.x_mov) + 0]
+    cmp a, (-(1)) >> 0
+    jnz main_._lbl_52
+    mov a, [(main_.x_mov) + 1]
+    subb a, (-(1)) >> 8
+main_._lbl_52:
+    mov a, f
+    and a, 4
+    mov [_condition + 0], a
+    or a, [_condition + 0]
+    jz main_._lbl_51
+    mov a, (19) >> 0
+    mov [(main_.x_new) + 0], a
+    mov a, (19) >> 8
+    mov [(main_.x_new) + 1], a
+    jmp main_._lbl_50
+main_._lbl_51:
+    mov a, (0) >> 0
+    mov [(main_.x_new) + 0], a
+    mov a, (0) >> 8
+    mov [(main_.x_new) + 1], a
+main_._lbl_50:
+main_._lbl_48:
+    mov a, [(main_.y_head) + 0]
+    add a, [(main_.y_mov) + 0]
+    mov [main_._tmp_0 + 0], a
+    mov a, [(main_.y_head) + 1]
+    addc a, [(main_.y_mov) + 1]
+    mov [main_._tmp_0 + 1], a
+    mov a, [main_._tmp_0 + 0]
+    and a, (15) >> 0
+    mov [(main_.y_new) + 0], a
+    mov a, [main_._tmp_0 + 1]
+    and a, (15) >> 8
+    mov [(main_.y_new) + 1], a
+    mov c, (4) >> 0
+    mov a, [(main_.x_new) + 0]
+    mov d, [(main_.x_new) + 1]
+main_._lbl_53:
+    dec c
+    jnc main_._lbl_54
+    shl a
+    xch a, d
+    rol a
+    xch a, d
+    jmp main_._lbl_53
+main_._lbl_54:
+    mov [main_._tmp_0 + 0], a
+    mov a, d
+    mov [main_._tmp_0 + 1], a
+    mov a, [main_._tmp_0 + 0]
+    add a, [(main_.y_new) + 0]
+    mov [(main_.board_index) + 0], a
+    mov a, [main_._tmp_0 + 1]
+    addc a, [(main_.y_new) + 1]
+    mov [(main_.board_index) + 1], a
+    mov a, [(main_.offset) + 0]
+    shl a
+    mov [main_._tmp_0 + 0], a
+    mov a, [(main_.offset) + 1]
+    rol a
+    mov [main_._tmp_0 + 1], a
+    mov a, [(segments_x) + 0]
+    add a, [main_._tmp_0 + 0]
+    mov [main_._tmp_1 + 0], a
+    mov a, [(segments_x) + 1]
+    addc a, [main_._tmp_0 + 1]
+    mov [main_._tmp_1 + 1], a
+    mov c, [main_._tmp_1 + 0]
+    mov d, [main_._tmp_1 + 1]
+    mov a, [(main_.x_head) + 0]
+    mov [cd], a
+    inc c
+    jnc main_._lbl_55
+    inc d
+main_._lbl_55:
+    mov a, [(main_.x_head) + 1]
+    mov [cd], a
+    mov a, [(main_.offset) + 0]
+    shl a
+    mov [main_._tmp_0 + 0], a
+    mov a, [(main_.offset) + 1]
+    rol a
+    mov [main_._tmp_0 + 1], a
+    mov a, [(segments_y) + 0]
+    add a, [main_._tmp_0 + 0]
+    mov [main_._tmp_1 + 0], a
+    mov a, [(segments_y) + 1]
+    addc a, [main_._tmp_0 + 1]
+    mov [main_._tmp_1 + 1], a
+    mov c, [main_._tmp_1 + 0]
+    mov d, [main_._tmp_1 + 1]
+    mov a, [(main_.y_head) + 0]
+    mov [cd], a
+    inc c
+    jnc main_._lbl_56
+    inc d
+main_._lbl_56:
+    mov a, [(main_.y_head) + 1]
+    mov [cd], a
+    mov a, [(main_.board_index) + 0]
+    shl a
+    mov [main_._tmp_0 + 0], a
+    mov a, [(main_.board_index) + 1]
+    rol a
+    mov [main_._tmp_0 + 1], a
+    mov a, [(board) + 0]
+    add a, [main_._tmp_0 + 0]
+    mov [main_._tmp_1 + 0], a
+    mov a, [(board) + 1]
+    addc a, [main_._tmp_0 + 1]
+    mov [main_._tmp_1 + 1], a
+    mov c, [main_._tmp_1 + 0]
+    mov d, [main_._tmp_1 + 1]
+    mov a, [cd]
+    mov [main_._tmp_2 + 0], a
+    inc c
+    jnc main_._lbl_59
+    inc d
+main_._lbl_59:
+    mov a, [cd]
+    mov [main_._tmp_2 + 1], a
+    mov a, [main_._tmp_2 + 0]
+    cmp a, (1) >> 0
+    jnz main_._lbl_60
+    mov a, [main_._tmp_2 + 1]
+    subb a, (1) >> 8
+main_._lbl_60:
+    mov a, f
+    and a, 4
+    mov [_condition + 0], a
+    or a, [_condition + 0]
+    jz main_._lbl_57
+    jmp main_.break_game_loop + 0
+main_._lbl_57:
+    mov a, [(main_.board_index) + 0]
+    shl a
+    mov [main_._tmp_0 + 0], a
+    mov a, [(main_.board_index) + 1]
+    rol a
+    mov [main_._tmp_0 + 1], a
+    mov a, [(board) + 0]
+    add a, [main_._tmp_0 + 0]
+    mov [main_._tmp_1 + 0], a
+    mov a, [(board) + 1]
+    addc a, [main_._tmp_0 + 1]
+    mov [main_._tmp_1 + 1], a
+    mov c, [main_._tmp_1 + 0]
+    mov d, [main_._tmp_1 + 1]
+    mov a, (1) >> 0
+    mov [cd], a
+    inc c
+    jnc main_._lbl_61
+    inc d
+main_._lbl_61:
+    mov a, (1) >> 8
+    mov [cd], a
+    mov a, [(main_.offset) + 0]
+    add a, [(main_.length) + 0]
+    mov [main_._tmp_0 + 0], a
+    mov a, [(main_.offset) + 1]
+    addc a, [(main_.length) + 1]
+    mov [main_._tmp_0 + 1], a
+    mov a, [main_._tmp_0 + 0]
+    and a, (255) >> 0
+    mov [(main_.seg_index) + 0], a
+    mov a, [main_._tmp_0 + 1]
+    and a, (255) >> 8
+    mov [(main_.seg_index) + 1], a
+    mov a, [(main_.seg_index) + 0]
+    shl a
+    mov [main_._tmp_0 + 0], a
+    mov a, [(main_.seg_index) + 1]
+    rol a
+    mov [main_._tmp_0 + 1], a
+    mov a, [(segments_x) + 0]
+    add a, [main_._tmp_0 + 0]
+    mov [main_._tmp_1 + 0], a
+    mov a, [(segments_x) + 1]
+    addc a, [main_._tmp_0 + 1]
+    mov [main_._tmp_1 + 1], a
+    mov c, [main_._tmp_1 + 0]
+    mov d, [main_._tmp_1 + 1]
+    mov a, [cd]
+    mov [(main_.x_tail) + 0], a
+    inc c
+    jnc main_._lbl_62
+    inc d
+main_._lbl_62:
+    mov a, [cd]
+    mov [(main_.x_tail) + 1], a
+    mov a, [(main_.seg_index) + 0]
+    shl a
+    mov [main_._tmp_0 + 0], a
+    mov a, [(main_.seg_index) + 1]
+    rol a
+    mov [main_._tmp_0 + 1], a
+    mov a, [(segments_y) + 0]
+    add a, [main_._tmp_0 + 0]
+    mov [main_._tmp_1 + 0], a
+    mov a, [(segments_y) + 1]
+    addc a, [main_._tmp_0 + 1]
+    mov [main_._tmp_1 + 1], a
+    mov c, [main_._tmp_1 + 0]
+    mov d, [main_._tmp_1 + 1]
+    mov a, [cd]
+    mov [(main_.y_tail) + 0], a
+    inc c
+    jnc main_._lbl_63
+    inc d
+main_._lbl_63:
+    mov a, [cd]
+    mov [(main_.y_tail) + 1], a
+    mov a, [(main_.x_tail) + 0]
+    mov [set_pixel_._param_0 + 0], a
+    mov a, [(main_.x_tail) + 1]
+    mov [set_pixel_._param_0 + 1], a
+    mov a, [(main_.y_tail) + 0]
+    mov [set_pixel_._param_1 + 0], a
+    mov a, [(main_.y_tail) + 1]
+    mov [set_pixel_._param_1 + 1], a
+    mov a, (0) >> 0
+    mov [set_pixel_._param_2 + 0], a
+    mov a, (0) >> 8
+    mov [set_pixel_._param_2 + 1], a
+    call set_pixel_
+    mov c, (4) >> 0
+    mov a, [(main_.x_tail) + 0]
+    mov d, [(main_.x_tail) + 1]
+main_._lbl_64:
+    dec c
+    jnc main_._lbl_65
+    shl a
+    xch a, d
+    rol a
+    xch a, d
+    jmp main_._lbl_64
+main_._lbl_65:
+    mov [main_._tmp_0 + 0], a
+    mov a, d
+    mov [main_._tmp_0 + 1], a
+    mov a, [main_._tmp_0 + 0]
+    add a, [(main_.y_tail) + 0]
+    mov [main_._tmp_1 + 0], a
+    mov a, [main_._tmp_0 + 1]
+    addc a, [(main_.y_tail) + 1]
+    mov [main_._tmp_1 + 1], a
+    mov a, [main_._tmp_1 + 0]
+    shl a
+    mov [main_._tmp_2 + 0], a
+    mov a, [main_._tmp_1 + 1]
+    rol a
+    mov [main_._tmp_2 + 1], a
+    mov a, [(board) + 0]
+    add a, [main_._tmp_2 + 0]
+    mov [main_._tmp_3 + 0], a
+    mov a, [(board) + 1]
+    addc a, [main_._tmp_2 + 1]
+    mov [main_._tmp_3 + 1], a
+    mov c, [main_._tmp_3 + 0]
+    mov d, [main_._tmp_3 + 1]
+    mov a, (0) >> 0
+    mov [cd], a
+    inc c
+    jnc main_._lbl_66
+    inc d
+main_._lbl_66:
+    mov a, (0) >> 8
+    mov [cd], a
+    mov a, [(main_.x_new) + 0]
+    cmp a, [(x_apple) + 0]
+    jnz main_._lbl_70
+    mov a, [(main_.x_new) + 1]
+    subb a, [(x_apple) + 1]
+main_._lbl_70:
+    mov a, f
+    and a, 4
+    mov [_condition + 0], a
+    or a, [_condition + 0]
+    jz main_._lbl_69
+    mov a, [(main_.y_new) + 0]
+    cmp a, [(y_apple) + 0]
+    jnz main_._lbl_71
+    mov a, [(main_.y_new) + 1]
+    subb a, [(y_apple) + 1]
+main_._lbl_71:
+    mov a, f
+    and a, 4
+    mov [_condition + 0], a
+    or a, [_condition + 0]
+main_._lbl_69:
+    jz main_._lbl_67
+    mov a, [(main_.length) + 0]
+    add a, (1) >> 0
+    mov [(main_.length) + 0], a
+    mov a, [(main_.length) + 1]
+    addc a, (1) >> 8
+    mov [(main_.length) + 1], a
+    mov a, [(main_.length) + 0]
+    mov [set_score_._param_0 + 0], a
+    mov a, [(main_.length) + 1]
+    mov [set_score_._param_0 + 1], a
+    call set_score_
+    call place_apple_
+main_._lbl_67:
+    mov a, [(main_.offset) + 0]
+    sub a, (1) >> 0
+    mov [main_._tmp_0 + 0], a
+    mov a, [(main_.offset) + 1]
+    subb a, (1) >> 8
+    mov [main_._tmp_0 + 1], a
+    mov a, [main_._tmp_0 + 0]
+    and a, (255) >> 0
+    mov [(main_.offset) + 0], a
+    mov a, [main_._tmp_0 + 1]
+    and a, (255) >> 8
+    mov [(main_.offset) + 1], a
+    mov a, [(main_.x_new) + 0]
+    mov [(main_.x_head) + 0], a
+    mov a, [(main_.x_new) + 1]
+    mov [(main_.x_head) + 1], a
+    mov a, [(main_.y_new) + 0]
+    mov [(main_.y_head) + 0], a
+    mov a, [(main_.y_new) + 1]
+    mov [(main_.y_head) + 1], a
+    mov a, [(main_.x_head) + 0]
+    mov [set_pixel_._param_0 + 0], a
+    mov a, [(main_.x_head) + 1]
+    mov [set_pixel_._param_0 + 1], a
+    mov a, [(main_.y_head) + 0]
+    mov [set_pixel_._param_1 + 0], a
+    mov a, [(main_.y_head) + 1]
+    mov [set_pixel_._param_1 + 1], a
+    mov a, (1) >> 0
+    mov [set_pixel_._param_2 + 0], a
+    mov a, (1) >> 8
+    mov [set_pixel_._param_2 + 1], a
+    call set_pixel_
+    call redraw_
+    call redraw_
+    jmp main_._lbl_27
+main_._lbl_28:
+main_.break_game_loop:
+    mov a, (0) >> 0
+    mov [cursor_._param_0 + 0], a
+    mov a, (0) >> 8
+    mov [cursor_._param_0 + 1], a
+    mov a, (6) >> 0
+    mov [cursor_._param_1 + 0], a
+    mov a, (6) >> 8
+    mov [cursor_._param_1 + 1], a
+    call cursor_
+    mov a, _lbl_72 >> 0
+    mov [puts_._param_0 + 0], a
+    mov a, _lbl_72 >> 8
+    mov [puts_._param_0 + 1], a
+    call puts_
+    mov a, (0) >> 0
+    mov [(main_.val) + 0], a
+    mov a, (0) >> 8
+    mov [(main_.val) + 1], a
+main_._lbl_74:
+    mov a, (1) >> 0
+    cmp a, [(main_.val) + 0]
+    mov a, (1) >> 8
+    subb a, [(main_.val) + 1]
+    mov a, f
+    and a, 8
+    mov [_condition + 0], a
+    or a, [_condition + 0]
+    jz main_._lbl_73
+    mov a, (0) >> 0
+    mov [(main_.i) + 0], a
+    mov a, (0) >> 8
+    mov [(main_.i) + 1], a
+main_._lbl_76:
+    mov a, [(main_.length) + 0]
+    cmp a, [(main_.i) + 0]
+    mov a, [(main_.length) + 1]
+    subb a, [(main_.i) + 1]
+    mov a, f
+    and a, 8
+    mov [_condition + 0], a
+    or a, [_condition + 0]
+    jz main_._lbl_75
+    mov a, [(main_.offset) + 0]
+    add a, [(main_.i) + 0]
+    mov [main_._tmp_0 + 0], a
+    mov a, [(main_.offset) + 1]
+    addc a, [(main_.i) + 1]
+    mov [main_._tmp_0 + 1], a
+    mov a, [main_._tmp_0 + 0]
+    and a, (255) >> 0
+    mov [(main_.seg_index) + 0], a
+    mov a, [main_._tmp_0 + 1]
+    and a, (255) >> 8
+    mov [(main_.seg_index) + 1], a
+    mov a, [(main_.seg_index) + 0]
+    shl a
+    mov [main_._tmp_0 + 0], a
+    mov a, [(main_.seg_index) + 1]
+    rol a
+    mov [main_._tmp_0 + 1], a
+    mov a, [(segments_x) + 0]
+    add a, [main_._tmp_0 + 0]
+    mov [main_._tmp_1 + 0], a
+    mov a, [(segments_x) + 1]
+    addc a, [main_._tmp_0 + 1]
+    mov [main_._tmp_1 + 1], a
+    mov c, [main_._tmp_1 + 0]
+    mov d, [main_._tmp_1 + 1]
+    mov a, [cd]
+    mov [set_pixel_._param_0 + 0], a
+    inc c
+    jnc main_._lbl_77
+    inc d
+main_._lbl_77:
+    mov a, [cd]
+    mov [set_pixel_._param_0 + 1], a
+    mov a, [(main_.seg_index) + 0]
+    shl a
+    mov [main_._tmp_2 + 0], a
+    mov a, [(main_.seg_index) + 1]
+    rol a
+    mov [main_._tmp_2 + 1], a
+    mov a, [(segments_y) + 0]
+    add a, [main_._tmp_2 + 0]
+    mov [main_._tmp_3 + 0], a
+    mov a, [(segments_y) + 1]
+    addc a, [main_._tmp_2 + 1]
+    mov [main_._tmp_3 + 1], a
+    mov c, [main_._tmp_3 + 0]
+    mov d, [main_._tmp_3 + 1]
+    mov a, [cd]
+    mov [set_pixel_._param_1 + 0], a
+    inc c
+    jnc main_._lbl_78
+    inc d
+main_._lbl_78:
+    mov a, [cd]
+    mov [set_pixel_._param_1 + 1], a
+    mov a, [(main_.val) + 0]
+    mov [set_pixel_._param_2 + 0], a
+    mov a, [(main_.val) + 1]
+    mov [set_pixel_._param_2 + 1], a
+    call set_pixel_
+    call redraw_
+    mov a, [(main_.i) + 0]
+    add a, (1) >> 0
+    mov [(main_.i) + 0], a
+    mov a, [(main_.i) + 1]
+    addc a, (1) >> 8
+    mov [(main_.i) + 1], a
+    jmp main_._lbl_76
+main_._lbl_75:
+    mov a, [(main_.val) + 0]
+    add a, (1) >> 0
+    mov [(main_.val) + 0], a
+    mov a, [(main_.val) + 1]
+    addc a, (1) >> 8
+    mov [(main_.val) + 1], a
+    jmp main_._lbl_74
+main_._lbl_73:
+    ret 
+place_apple_:
+place_apple_._lbl_79:
+    call rand_
+    mov a, [_return + 0]
+    mov [place_apple_._tmp_0 + 0], a
+    mov a, [_return + 1]
+    mov [place_apple_._tmp_0 + 1], a
+    mov a, [place_apple_._tmp_0 + 0]
+    mov [mod_._param_0 + 0], a
+    mov a, [place_apple_._tmp_0 + 1]
+    mov [mod_._param_0 + 1], a
+    mov a, (20) >> 0
+    mov [mod_._param_1 + 0], a
+    mov a, (20) >> 8
+    mov [mod_._param_1 + 1], a
+    call mod_
+    mov a, [_return + 0]
+    mov [(x_apple) + 0], a
+    mov a, [_return + 1]
+    mov [(x_apple) + 1], a
+    call rand_
+    mov a, [_return + 0]
+    mov [place_apple_._tmp_0 + 0], a
+    mov a, [_return + 1]
+    mov [place_apple_._tmp_0 + 1], a
+    mov a, [place_apple_._tmp_0 + 0]
+    and a, (15) >> 0
+    mov [(y_apple) + 0], a
+    mov a, [place_apple_._tmp_0 + 1]
+    and a, (15) >> 8
+    mov [(y_apple) + 1], a
+    mov c, (4) >> 0
+    mov a, [(x_apple) + 0]
+    mov d, [(x_apple) + 1]
+place_apple_._lbl_80:
+    dec c
+    jnc place_apple_._lbl_81
+    shl a
+    xch a, d
+    rol a
+    xch a, d
+    jmp place_apple_._lbl_80
+place_apple_._lbl_81:
+    mov [place_apple_._tmp_0 + 0], a
+    mov a, d
+    mov [place_apple_._tmp_0 + 1], a
+    mov a, [place_apple_._tmp_0 + 0]
+    add a, [(y_apple) + 0]
+    mov [(place_apple_.index) + 0], a
+    mov a, [place_apple_._tmp_0 + 1]
+    addc a, [(y_apple) + 1]
+    mov [(place_apple_.index) + 1], a
+    mov a, [(place_apple_.index) + 0]
+    shl a
+    mov [place_apple_._tmp_0 + 0], a
+    mov a, [(place_apple_.index) + 1]
+    rol a
+    mov [place_apple_._tmp_0 + 1], a
+    mov a, [(board) + 0]
+    add a, [place_apple_._tmp_0 + 0]
+    mov [place_apple_._tmp_1 + 0], a
+    mov a, [(board) + 1]
+    addc a, [place_apple_._tmp_0 + 1]
+    mov [place_apple_._tmp_1 + 1], a
+    mov c, [place_apple_._tmp_1 + 0]
+    mov d, [place_apple_._tmp_1 + 1]
+    mov a, [cd]
+    mov [place_apple_._tmp_2 + 0], a
+    inc c
+    jnc place_apple_._lbl_82
+    inc d
+place_apple_._lbl_82:
+    mov a, [cd]
+    mov [place_apple_._tmp_2 + 1], a
+    mov a, [place_apple_._tmp_2 + 0]
+    cmp a, (0) >> 0
+    jnz place_apple_._lbl_83
+    mov a, [place_apple_._tmp_2 + 1]
+    subb a, (0) >> 8
+place_apple_._lbl_83:
+    mov [_condition + 0], a
+    or a, [_condition + 0]
+    jnz place_apple_._lbl_79
+    mov a, [(x_apple) + 0]
+    mov [set_pixel_._param_0 + 0], a
+    mov a, [(x_apple) + 1]
+    mov [set_pixel_._param_0 + 1], a
+    mov a, [(y_apple) + 0]
+    mov [set_pixel_._param_1 + 0], a
+    mov a, [(y_apple) + 1]
+    mov [set_pixel_._param_1 + 1], a
+    mov a, (1) >> 0
+    mov [set_pixel_._param_2 + 0], a
+    mov a, (1) >> 8
+    mov [set_pixel_._param_2 + 1], a
+    call set_pixel_
+    ret 
+set_score_:
+    mov a, [(set_score_.score) + 0]
+    sub a, (1) >> 0
+    mov [(set_score_.score) + 0], a
+    mov a, [(set_score_.score) + 1]
+    subb a, (1) >> 8
+    mov [(set_score_.score) + 1], a
+    mov a, [(set_score_.score) + 0]
+    mov [out_._param_0 + 0], a
+    mov a, [(set_score_.score) + 1]
+    mov [out_._param_0 + 1], a
+    call out_
+    mov a, (1) >> 0
+    mov [cursor_._param_0 + 0], a
+    mov a, (1) >> 8
+    mov [cursor_._param_0 + 1], a
+    mov a, (13) >> 0
+    mov [cursor_._param_1 + 0], a
+    mov a, (13) >> 8
+    mov [cursor_._param_1 + 1], a
+    call cursor_
+    mov a, [(set_score_.score) + 0]
+    mov [putd_._param_0 + 0], a
+    mov a, [(set_score_.score) + 1]
+    mov [putd_._param_0 + 1], a
+    call putd_
+    ret 
+
+_lbl_5:
+    dataw 0, 0, 0, 0, 0, 16, 16, 16, 16, 16, 32, 32, 32, 32, 32, 48, 48, 48, 48, 48
+_lbl_7:
+    dataw 16, 8, 4, 2, 1, 16, 8, 4, 2, 1, 16, 8, 4, 2, 1, 16, 8, 4, 2, 1
+_lbl_22:
+    data 32, 83, 110, 97, 107, 101, 33, 0
+_lbl_23:
+    data 32, 115, 99, 111, 114, 101, 58, 32, 0
+_lbl_72:
+    data 71, 97, 109, 101, 32, 79, 118, 101, 114, 33, 0
+
+section "var"
+_condition:
+    res 2
+_return:
+    res 2
+lcd_init_._param_0:
+    res 2
+lcd_command_._param_0:
+lcd_command_.command:
+    res 2
+cursor_._param_0:
+cursor_.line:
+    res 2
+cursor_._param_1:
+cursor_.char:
+    res 2
+cursor_._tmp_0:
+    res 2
+cursor_._tmp_1:
+    res 2
+putc_._param_0:
+putc_.c:
+    res 2
+puts_._param_0:
+    res 2
+putd_._param_0:
+    res 2
+set_._param_0:
+set_.dest:
+    res 2
+set_._param_1:
+set_.value:
+    res 2
+set_._param_2:
+set_.num:
+    res 2
+set_._tmp_0:
+    res 2
+set_char_._param_0:
+set_char_.char:
+    res 2
+set_char_._param_1:
+set_char_.data:
+    res 2
+set_char_.line:
+    res 2
+bitmap:
+    res 2
+set_pixel_._param_0:
+set_pixel_.x:
+    res 2
+set_pixel_._param_1:
+set_pixel_.y:
+    res 2
+set_pixel_._param_2:
+set_pixel_.value:
+    res 2
+set_pixel_.byte:
+    res 2
+set_pixel_.bit:
+    res 2
+set_pixel_._tmp_0:
+    res 2
+set_pixel_._tmp_1:
+    res 2
+set_pixel_._tmp_2:
+    res 2
+set_pixel_._tmp_3:
+    res 2
+set_pixel_._tmp_4:
+    res 2
+_lbl_15:
+    res 64
+render_.i:
+    res 2
+redraw_.addr:
+    res 2
+redraw_.i:
+    res 2
+out_._param_0:
+out_.x:
+    res 2
+mul_._param_0 = math.number_1
+mul_._param_1 = math.number_2
+seed:
+    res 2
+rand_._tmp_0:
+    res 2
+mod_._param_0 = math.number_1
+mod_._param_1 = math.number_2
+board:
+    res 2
+segments_x:
+    res 2
+segments_y:
+    res 2
+x_apple:
+    res 2
+y_apple:
+    res 2
+_lbl_24:
+    res 640
+_lbl_25:
+    res 512
+_lbl_26:
+    res 512
+main_.length:
+    res 2
+main_.offset:
+    res 2
+main_.x_head:
+    res 2
+main_.y_head:
+    res 2
+main_.x_mov:
+    res 2
+main_.y_mov:
+    res 2
+main_.last_scancode:
+    res 2
+main_.scancode:
+    res 2
+main_.x_new:
+    res 2
+main_.y_new:
+    res 2
+main_.board_index:
+    res 2
+main_.seg_index:
+    res 2
+main_.x_tail:
+    res 2
+main_.y_tail:
+    res 2
+main_.val:
+    res 2
+main_.i:
+    res 2
+main_._tmp_0:
+    res 2
+main_._tmp_1:
+    res 2
+main_._tmp_2:
+    res 2
+main_._tmp_3:
+    res 2
+place_apple_.index:
+    res 2
+place_apple_._tmp_0:
+    res 2
+place_apple_._tmp_1:
+    res 2
+place_apple_._tmp_2:
+    res 2
+set_score_._param_0:
+set_score_.score:
+    res 2

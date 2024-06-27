@@ -1,0 +1,27 @@
+; Multiplys 2 unsigned 8 bit integers. 
+; Input: a, c
+; Result: a
+; Modifies: assume all
+
+once
+
+include "stdlib/math.spdr"
+
+multiply:
+    mov [math.number_1], a
+    mov [math.number_2], c
+    mov a, 0
+    mov c, 8
+.loop:
+    shr [math.number_2]
+    jnc .shift
+    add a, [math.number_1]
+.shift:
+    ror a
+    ror [math.result]
+    dec c
+    jnz .loop
+    mov c, a
+    mov a, [math.result]
+    ret 
+

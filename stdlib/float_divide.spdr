@@ -1,0 +1,24 @@
+once
+include "stdlib/float.spdr"
+include "stdlib/divide_16.spdr"
+
+float_divide:
+    call move_mantisas
+    call divide_16
+
+    mov [f0.mant], a
+    mov [f0.mant + 1], c
+
+    mov a, [f1.exp]
+    mov [ftemp], a
+    mov a, [f0.exp]
+    sub a, [ftemp]
+    and a, EXP
+    mov [ftemp], a
+    call find_sign
+    or a, [ftemp]
+    mov [f0.exp], a
+
+    call normal
+    ret 
+

@@ -1,0 +1,24 @@
+once
+
+include "stdlib/print_hex_4.spdr"
+
+; Writes an 8 bit value to the screen in hexidecimal.
+print_hex_8:
+    push c
+    push d
+    mov c, a
+    shr a
+    shr a
+    shr a
+    shr a
+
+    push c
+    call print_hex_4
+    pop a
+    and a, 0b00001111
+    call print_hex_4
+
+    pop d
+    pop c
+    ret 
+

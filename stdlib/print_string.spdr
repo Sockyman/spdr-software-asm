@@ -1,0 +1,14 @@
+once
+
+print_string:
+    mov a, [cd]
+    bit a, 0xff
+    jnz .continue
+    ret 
+.continue:
+    lcd a
+    inc c
+    jnc print_string
+    inc d
+    jmp print_string
+

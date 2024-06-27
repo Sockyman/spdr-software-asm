@@ -1,0 +1,14 @@
+once
+reset:
+    call monitor
+    jmp reset
+
+include "monitor.spdr"
+include "snake_compiled.spdr"
+
+section "code"
+
+include "stdlib/float_add.spdr"
+include "stdlib/float_multiply.spdr"
+include "stdlib/float_divide.spdr"
+

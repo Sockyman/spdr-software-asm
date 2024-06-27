@@ -1,0 +1,30 @@
+; Divides 2 unsigned 8 bit integers.
+; Input: a: numerator, c: denominator
+; Result: a: quoitent, c: remainder
+; Modifies: a, c, f
+
+once
+
+include "stdlib/math.spdr"
+
+divide:
+    mov [math.number_1], a
+    mov [math.number_2], c
+    mov a, 0
+    mov [math.remainder], a
+    mov c, 8
+.loop_1:
+    shl [math.number_1]
+    rol [math.remainder]
+    mov a, [math.remainder]
+    sub a, [math.number_2]
+    jnc .loop_2
+    mov [math.remainder], a
+    inc [math.number_1]
+.loop_2:
+    dec c
+    jnz .loop_1
+    mov c, [math.remainder]
+    mov a, [math.number_1]
+    ret 
+

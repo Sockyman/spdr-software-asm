@@ -1,0 +1,26 @@
+once
+include "stdlib/float.spdr"
+include "stdlib/multiply_16.spdr"
+
+float_multiply:
+    call move_mantisas
+    call multiply_16
+
+    mov a, [math.result + 2]
+    mov [f0.mant], a
+    mov a, [math.result + 3]
+    mov [f0.mant + 1], a
+
+    mov a, [f0.exp]
+    mov [ftemp], a
+    mov a, [f1.exp]
+    add a, [ftemp]
+    and a, EXP
+    mov [ftemp], a
+    call find_sign
+    or a, [ftemp]
+    mov [f0.exp], a
+
+    call normal
+    ret 
+

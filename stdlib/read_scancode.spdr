@@ -1,0 +1,21 @@
+; Waits for a keypress and reads a scancode from the scancode buffer.
+; Result: a
+; Modifies: assume all
+
+once
+
+include "stdlib/isr.spdr"
+
+read_scancode:
+    mov a, [rptr]
+    cmp a, [wptr]
+    jz .no_code
+    mov c, a
+    mov a, [c, scan_buffer]
+    inc c
+    mov [rptr], c
+    ret 
+.no_code:
+    mov a, 0
+    ret 
+

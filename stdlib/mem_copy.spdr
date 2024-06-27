@@ -1,0 +1,29 @@
+once
+
+mem_copy:
+    mov c, [.src]
+    mov d, [.src + 1]
+.loop:
+    dec [.count]
+    decb [.count + 1]
+    jnc .end
+    mov a, [cd]
+    xch c, [.dest]
+    xch d, [.dest + 1]
+    mov [cd], a
+    inc c
+    incc d
+    xch c, [.dest]
+    xch d, [.dest]
+    inc c
+    incc d
+    jmp .loop
+
+
+.end:
+    ret 
+
+variable .src 2
+variable .dest 2
+variable .count 2
+

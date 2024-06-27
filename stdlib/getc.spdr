@@ -1,0 +1,82 @@
+; Waits for a character to be available and returns the next character.
+; Result: a
+; Modifies: assume all
+
+once
+
+include "stdlib/scancode.spdr"
+include "stdlib/keycode.spdr"
+include "stdlib/read_scancode.spdr"
+
+variable kbd_flags 1
+
+getc:
+.loop:
+    call read_scancode
+    cmp a, 0
+    jz .loop
+    cmp a, SCAN_EXTENDED
+    jz .loop
+    cmp a, SCAN_RELEASE
+    jz .flip_release
+    mov c, a
+    mov a, [kbd_flags]
+    bit a, KBD_RELEASE
+    mov a, c
+    jnz .release_key
+    cmp a, SCAN_SHIFT
+    jz .shift_key
+    cmp a, SCAN_SHIFT_RIGHT
+    jz .shift_key
+
+    mov c, a
+    mov a, [kbd_flags]
+    bit a, KBD_SHIFT
+    mov a, c
+    jz .no_shift
+    or a, 0x80
+.no_shift:
+    mov c, a
+    mov a, [c, ascii_map]
+    cmp a, KEY_INVALID
+    jz .loop
+    ret 
+
+.shift_key:
+    mov a, [kbd_flags]
+    or a, KBD_SHIFT
+    mov [kbd_flags], a
+    jmp .loop
+.release_key:
+    cmp a, SCAN_SHIFT
+    jnz .flip_release
+    mov a, [kbd_flags]
+    and a, ~KBD_SHIFT
+    mov [kbd_flags], a
+.flip_release:
+    mov a, [kbd_flags]
+    xor a, KBD_RELEASE
+    mov [kbd_flags], a
+    jmp .loop
+
+
+align 0x100
+ascii_map:
+    data "~~~~~~~~~~~~~ `~"
+    data "~~~~~q1~~~zsaw2~"
+    data "~cxde43~~ vftr5~"
+    data "~nbhgy6~~~mju78~"
+    data "~,kio09~~./l;p-~"
+    data "~~'~[=~~~~", KEY_ENTER, "]~\\~~"
+    data "~~~~~~", KEY_BSPC, "~~1~", KEY_LEFT, "7~~~"
+    data KEY_INSERT, KEY_DELETE, KEY_DOWN, "5", KEY_RIGHT, KEY_UP, KEY_ESC, "~~+3-*9~~"
+ascii_map_shift:
+    data "~~~~~~~~~~~~~ `~"
+    data "~~~~~Q!~~~ZSAW@~"
+    data "~CXDE$#~~ VFTR%~"
+    data "~NBHGY^~~~MJU&*~"
+    data "~<KIO)(~~>?L:P_~"
+    data "~~", '"', "~{+~~~~", KEY_ENTER, "}~|~~"
+    data "~~~~~~", KEY_BSPC, "~~1~", KEY_LEFT, "7~~~"
+    data KEY_SHIFT_INSERT, KEY_DELETE, KEY_DOWN, "5", KEY_RIGHT, KEY_UP, KEY_ESC, "~~+3_*9~~"
+

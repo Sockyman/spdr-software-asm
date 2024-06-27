@@ -1,0 +1,23 @@
+once
+
+string_length:
+    mov [.str], c
+    mov [.str + 1], d
+.loop:
+    mov a, [cd]
+    cmp a, 0
+    jz .end
+    inc c
+    incc d
+    jmp .loop
+.end:
+    mov a, c
+    sub a, [.str]
+    mov c, a
+    mov a, d
+    subb a, [.str + 1]
+    mov d, a
+    ret 
+
+variable .str 2
+

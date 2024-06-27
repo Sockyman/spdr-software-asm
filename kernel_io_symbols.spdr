@@ -1,0 +1,24 @@
+once
+;provides "std:getc.spdr"
+getc = 0x0123 ; (291)
+;getc.loop = 0x0123 ; (291)
+;getc.no_shift = 0x0156 ; (342)
+;getc.shift_key = 0x015f ; (351)
+;getc.release_key = 0x016a ; (362)
+;getc.flip_release = 0x0177 ; (375)
+rptr = 0x8201 ; (33281)
+wptr = 0x8200 ; (33280)
+;provides "std:isr.spdr"
+;isr = 0x0100 ; (256)
+;KEY_ENTER = 0x000a ; (10)
+;KEY_BSPC = 0x0008 ; (8)
+;KEY_INSERT = 0x0019 ; (25)
+;KEY_SHIFT_INSERT = 0x001a ; (26)
+;KEY_ESC = 0x001b ; (27)
+;KEY_LEFT = 0x0011 ; (17)
+;KEY_UP = 0x0012 ; (18)
+;KEY_RIGHT = 0x0013 ; (19)
+;KEY_DOWN = 0x0014 ; (20)
+;KEY_DELETE = 0x007f ; (127)
+kbd_flags = 0x8202 ; (33282)
+;input_line = 0x8000

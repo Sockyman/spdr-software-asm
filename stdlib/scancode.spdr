@@ -1,0 +1,11 @@
+once
+
+SCAN_RELEASE  = 0xf0
+SCAN_EXTENDED = 0xe0
+
+SCAN_SHIFT    = 0x12
+SCAN_SHIFT_RIGHT = 0x59
+SCAN_ENTER    = 0x5a
+SCAN_BSPC     = 0x66
+SCAN_ESC      = 0x76
+

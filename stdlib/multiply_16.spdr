@@ -1,0 +1,35 @@
+; Multiplys 2 unsigned 16 bit integers. 
+; Input: math.number_1, math.number_2
+; Result: math.result
+; Modifies: a, c, d, f
+
+once
+
+include "stdlib/math.spdr"
+
+multiply_16:
+    mov a, 0
+    mov [math.result + 2], a
+    mov c, 16
+.loop:
+    shr [math.number_2 + 1]
+    ror [math.number_2]
+    jnc .shift
+    mov d, a
+    mov a, [math.number_1]
+    add a, [math.result + 2]
+    mov [math.result + 2], a
+    mov a, d
+    addc a, [math.number_1 + 1]
+.shift:
+    ror a
+    ror [math.result + 2]
+    ror [math.result + 1]
+    ror [math.result]
+    dec c
+    jnz .loop
+    mov [math.result + 3], a
+    mov a, [math.result]
+    mov c, [math.result + 1]
+    ret 
+

@@ -1,0 +1,163 @@
+once
+
+include "stdlib/keycode.spdr"
+include "stdlib/lcd.spdr"
+
+STRING_LEN = 16
+LINE_LEN = STRING_LEN + 1
+
+WRITE_CHAR   = 0b001
+CURSOR_LEFT  = 0b010
+CURSOR_RIGHT = 0b100
+
+;include "stdlib/getc.spdr"
+
+variable cursor 1
+variable cli_row 1
+
+variable input_line LINE_LEN
+
+reset_cli:
+    mov a, 0
+    mov [cursor], a
+    mov [kbd_flags], a
+    mov [wptr], a
+    mov [rptr], a
+
+    mov c, input_line
+    mov d, input_line >> 8
+    call clear_line
+    ret 
+
+
+cli_action:
+    mov d, a
+    mov a, c
+    bit a, CURSOR_LEFT
+    jz .no_shift_left
+    mov a, [cursor]
+    dec a
+    jn .no_shift_left
+    mov [cursor], a
+    mov a, LCD_SHIFT
+    lcc a
+.no_shift_left:
+    mov a, c
+    bit a, WRITE_CHAR
+    jz .no_write_char
+    mov a, d
+    lcd a
+    call string_put
+    mov a, LCD_SHIFT
+    lcc a
+.no_write_char:
+    mov a, c
+    bit a, CURSOR_RIGHT
+    jz .no_shift_right
+    mov a, [cursor]
+    inc a
+    cmp a, STRING_LEN
+    jp .no_shift_right
+    mov [cursor], a
+    mov a, LCD_SHIFT | LCD_SHIFT_RIGHT
+    lcc a
+.no_shift_right:
+    ret 
+
+
+string_put:
+    push f
+    push c
+    push d
+
+    mov c, a
+    mov a, input_line
+    add a, [cursor]
+    xch a, c
+    mov d, input_line >> 8
+    incc d
+    mov [cd], a
+
+    pop d
+    pop c
+    pop f
+    ret 
+
+
+cli_loop:
+    call getc
+    cmp a, KEY_BSPC
+    jz .bspc_pressed
+    cmp a, KEY_RIGHT
+    jz .right_pressed
+    cmp a, KEY_LEFT
+    jz .left_pressed
+    cmp a, ' '
+    jc .write_key
+    ret 
+.write_key:
+    mov c, CURSOR_RIGHT | WRITE_CHAR
+    call cli_action
+    jmp .end
+.right_pressed:
+    mov c, CURSOR_RIGHT
+    call cli_action
+    jmp .end
+.left_pressed:
+    mov c, CURSOR_LEFT
+    call cli_action
+    jmp .end
+.bspc_pressed:
+    mov a, ' '
+    mov c, CURSOR_LEFT | WRITE_CHAR
+    call cli_action
+    jmp .end
+.end:
+    jmp cli_loop
+
+
+set_cursor:
+    mov [cursor], a
+    mov a, LCD_DDRAM
+    or a, [cli_row]
+    or a, [cursor]
+    lcc a
+    ret 
+
+reset_cursor:
+    mov a, LCD_DDRAM
+    or a, [cli_row]
+    or a, [cursor]
+    lcc a
+    ret 
+
+cli_redraw:
+    mov a, LCD_DDRAM
+    or a, [cli_row]
+    lcc a
+    mov c, input_line
+    mov d, input_line >> 8
+    call print_string
+    ret 
+
+include "stdlib/print_string.spdr"
+
+
+clear_line:
+    mov a, STRING_LEN
+    push a
+.loop:
+    pop a
+    dec a
+    jnc .end
+    push a
+    mov a, ' '
+    mov [cd], a
+    inc c
+    incc d
+    jmp .loop
+.end:
+    mov a, 0
+    mov [cd], a
+    ret 
+

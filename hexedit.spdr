@@ -1,0 +1,150 @@
+once
+
+include "stdlib/keycode.spdr"
+include "stdlib/parse_hex_4.spdr"
+
+hexedit:
+    mov a, 0
+    mov [.line_offset], a
+
+    mov a, 0xff
+    mov [.nibble], a
+.loop:
+
+..fix_address:
+    mov a, [.line_offset]
+    cmp a, 0
+    jn ...off_left
+    cmp a, 4
+    jc ...off_right
+    jmp ..draw
+...off_right:
+    mov a, [addr]
+    add a, 4
+    mov [addr], a
+    incc [addr + 1]
+    mov a, 0
+    mov [.line_offset], a
+    jmp ..draw
+...off_left:
+    mov a, [addr]
+    sub a, 4
+    mov [addr], a
+    decb [addr + 1]
+    mov a, 3
+    mov [.line_offset], a
+..draw:
+    mov a, LCD_DDRAM
+    lcc a
+
+    mov a, [addr]
+    sub a, 4
+    mov c, a
+    mov d, [addr + 1]
+    decb d
+    call dump_line
+    mov a, LCD_DDRAM | LCD_LINE_2
+    lcc a
+    call dump_line
+
+..move_cursor:
+    mov a, [.line_offset]
+    shl a
+    add a, [.line_offset]
+    add a, 5
+    mov f, [.nibble]
+    jc ...high
+    inc a
+...high:
+    or a, LCD_DDRAM | LCD_LINE_2
+    lcc a
+
+.key_loop:
+    call getc
+    cmp a, KEY_DOWN
+    jz .down_pressed
+    cmp a, KEY_UP
+    jz .up_pressed
+    cmp a, KEY_ENTER
+    jz .enter_pressed
+    cmp a, KEY_RIGHT
+    jz .right_pressed
+    cmp a, ' '
+    jz .right_pressed
+    cmp a, KEY_LEFT
+    jz .left_pressed
+    cmp a, KEY_BSPC
+    jz .left_pressed
+
+.modify_value:
+    call get_hex_4
+    jnz .key_loop
+    mov [.hex_value], a
+
+    mov a, [addr]
+    add a, [.line_offset]
+    mov c, a
+    mov d, [addr + 1]
+    incc d
+
+    mov a, [cd]
+    mov f, [.nibble]
+    jc ..high_nibble
+
+    and a, 0xf0
+    or a, [.hex_value]
+    jmp ..changed
+..high_nibble:
+    and a, 0x0f
+    xch a, [.hex_value]
+    shl a
+    shl a
+    shl a
+    shl a
+    or a, [.hex_value]
+..changed:
+    mov [cd], a
+    mov a, [.nibble]
+    not a
+    mov [.nibble], a
+    mov f, a
+    incc [.line_offset]
+
+    jmp .end
+
+.up_pressed:
+    mov a, [addr]
+    sub a, 4
+    mov [addr], a
+    decb [addr + 1]
+    jmp .end
+.down_pressed:
+    mov a, [addr]
+    add a, 4
+    mov [addr], a
+    incc [addr + 1]
+    jmp .end
+.right_pressed:
+    mov f, [.nibble]
+    jc .flip_end
+    inc [.line_offset]
+    jmp .flip_end
+.left_pressed:
+    mov f, [.nibble]
+    jnc .flip_end
+    dec [.line_offset]
+    jmp .flip_end
+.enter_pressed:
+    ret 
+.flip_end:
+    mov a, [.nibble]
+    not a
+    mov [.nibble], a
+.end:
+    jmp .loop
+
+variable .hex_value 1
+variable .line_offset 1
+variable .nibble 1
+
+
