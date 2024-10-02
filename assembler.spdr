@@ -1,8 +1,0 @@
-once
-
-assembler:
-
-    ret
-
-include "ins_set.spdr"
-

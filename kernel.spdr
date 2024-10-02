@@ -39,7 +39,7 @@ monitor_loop:
     jmp monitor_loop
 
 include "kernel_io_symbols.spdr"
-;include "stdlib/getc.spdr"
+include "stdlib/getc.spdr"
 include "cli.spdr"
 include "stdlib/lcd_init.spdr"
 include "stdlib/print_hex_8.spdr"

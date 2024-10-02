@@ -1,8 +1,0 @@
-once
-include "stdlib/float.spdr"
-include "stdlib/float_sub.spdr"
-include "stdlib/float_divide.spdr"
-
-fprint:
-    
-

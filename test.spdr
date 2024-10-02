@@ -1,0 +1,7 @@
+
+reset:
+    mov a, 3
+    add a, 4
+    out a
+    ret
+
